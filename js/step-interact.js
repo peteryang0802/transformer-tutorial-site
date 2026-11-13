@@ -1242,43 +1242,130 @@
     }
 
     /* ============================================================
-     * 第 10 章 · 一套系数 31 处共用（点位置，看同一张 W_K）
+     * 第 10 章 · 四个旋钮拧出输出（点旋钮 -1/0/1，看固定输入的输出怎么变）
      * ============================================================ */
-    function renderSharedWeight(container) {
-        container.classList.add('demo-lab', 'sp-lab');
+    function renderKnobMatrix(container) {
+        container.classList.add('demo-lab', 'km-lab');
         var wK = '<span class="mi">W<sub>K</sub></span>';
-        var hint = el('p', 'lab-hint');
-        hint.innerHTML = '权重矩阵只有一张，31 个位置都用它。点位置，看同一张 ' + wK + ' 怎么轮到谁都不变。';
-        container.appendChild(hint);
 
-        // 一张共用的 W_K
-        var wbox = el('div', 'sw-weight');
-        var label = el('p', 'sw-weight-label');
-        label.innerHTML = '共用的 ' + wK + '（2×2）';
-        wbox.appendChild(label);
-        var wgrid = el('div', 'sw-grid');
-        ['1', '−1', '0', '1'].forEach(function (v) {
-            wgrid.appendChild(el('span', 'sw-cell', v));
+        container.appendChild(el('p', 'lab-hint',
+            '点四个旋钮，每个在 -1、0、1 之间换。输入固定，看输出的箭头怎么跟着变。'));
+
+        var INPUT = [1, -1];
+        var names = ['w<sub>11</sub>', 'w<sub>12</sub>', 'w<sub>21</sub>', 'w<sub>22</sub>'];
+        var vals = [1, 0, 0, 1]; // 初始单位矩阵
+
+        var wLabel = el('p', 'km-weight-label');
+        wLabel.innerHTML = '系数 ' + wK + '（点格子换一档）';
+        container.appendChild(wLabel);
+
+        var knobGrid = el('div', 'km-knobs');
+        var knobBtns = [];
+        vals.forEach(function (v, i) {
+            var b = el('button', 'km-knob');
+            var nm = el('span', 'km-knob-name');
+            nm.innerHTML = names[i];
+            var num = el('span', 'km-knob-val');
+            b.appendChild(nm);
+            b.appendChild(num);
+            b.addEventListener('click', function () {
+                vals[i] = vals[i] <= -1 ? 1 : vals[i] - 1;
+                paint();
+            });
+            knobGrid.appendChild(b);
+            knobBtns.push({ btn: b, num: num });
         });
-        wbox.appendChild(wgrid);
-        container.appendChild(wbox);
+        container.appendChild(knobGrid);
 
-        // 位置（只画 5 个代表，实际 31 处）
-        var pos = ['第3处', '第10处', '第15处', '第20处', '第27处'];
-        var pickerWrap = el('div', 'sp-picker-wrap');
-        container.appendChild(pickerWrap);
-        var note = el('p', 'sw-note');
-        container.appendChild(note);
+        // 输入 → 输出
+        var flow = el('div', 'km-flow');
 
-        function writeNote(i) {
-            note.innerHTML = pos[i] + ' 用的还是上面这张 ' + wK +
-                '，系数没换，只是输入不同、算出的 K 不同。';
-        }
-        makePicker(pickerWrap, pos, 0, function (i) {
-            writeNote(i);
+        var inCard = el('div', 'km-card km-in');
+        inCard.appendChild(el('p', 'km-card-label', '输入（固定）'));
+        var inVec = el('div', 'km-vec');
+        INPUT.forEach(function (x) {
+            inVec.appendChild(el('b', 'km-vec-num', x < 0 ? '−1' : String(x)));
+        });
+        inCard.appendChild(inVec);
+        flow.appendChild(inCard);
+
+        flow.appendChild(el('span', 'km-sign', '×'));
+
+        var outCard = el('div', 'km-card km-out');
+        outCard.appendChild(el('p', 'km-card-label', '输出 K（实时）'));
+
+        // 小坐标系
+        var CX = 125, CY = 115, U = 40;
+        var svg = svgEl('svg', { viewBox: '0 0 250 230', class: 'km-svg' });
+        [-2, -1, 1, 2].forEach(function (g) {
+            svg.appendChild(svgEl('line', { x1: CX + g * U, y1: 25, x2: CX + g * U, y2: 205, class: 'km-grid' }));
+            svg.appendChild(svgEl('line', { x1: 25, y1: CY - g * U, x2: 225, y2: CY - g * U, class: 'km-grid' }));
+        });
+        svg.appendChild(svgEl('line', { x1: 25, y1: CY, x2: 225, y2: CY, class: 'km-axis' }));
+        svg.appendChild(svgEl('line', { x1: CX, y1: 25, x2: CX, y2: 205, class: 'km-axis' }));
+        svg.appendChild(svgEl('text', { x: 222, y: CY + 15, class: 'km-axis-label' })).textContent = 'x';
+        svg.appendChild(svgEl('text', { x: CX + 7, y: 36, class: 'km-axis-label' })).textContent = 'y';
+
+        var OUTC = '#7c3aed';
+        var defs = svgEl('defs');
+        var marker = svgEl('marker', {
+            id: 'km-head', markerWidth: 8, markerHeight: 8,
+            refX: 6, refY: 3, orient: 'auto', markerUnits: 'userSpaceOnUse'
+        });
+        marker.appendChild(svgEl('path', { d: 'M0,0 L7,3 L0,6 Z', fill: OUTC }));
+        defs.appendChild(marker);
+        svg.appendChild(defs);
+
+        var arrow = svgEl('line', {
+            x1: CX, y1: CY, x2: CX, y2: CY, stroke: OUTC, 'stroke-width': 3, 'marker-end': 'url(#km-head)'
+        });
+        svg.appendChild(arrow);
+        var originDot = svgEl('circle', { cx: CX, cy: CY, r: 5, fill: OUTC });
+        svg.appendChild(originDot);
+        var kTag = svgEl('text', { class: 'km-tag', fill: OUTC });
+        svg.appendChild(kTag);
+
+        outCard.appendChild(svg);
+        var kNum = el('p', 'km-k');
+        outCard.appendChild(kNum);
+        flow.appendChild(outCard);
+        container.appendChild(flow);
+
+        function fmt(n) { return n < 0 ? '−' + Math.abs(n) : String(n); }
+
+        function paint() {
+            knobBtns.forEach(function (k, i) {
+                var v = vals[i];
+                k.num.textContent = fmt(v);
+                k.btn.classList.remove('km-neg', 'km-zero', 'km-pos');
+                k.btn.classList.add(v < 0 ? 'km-neg' : v === 0 ? 'km-zero' : 'km-pos');
+            });
+            // K = INPUT · W，W=[[w11,w12],[w21,w22]]
+            var w11 = vals[0], w12 = vals[1], w21 = vals[2], w22 = vals[3];
+            var kx = INPUT[0] * w11 + INPUT[1] * w21;
+            var ky = INPUT[0] * w12 + INPUT[1] * w22;
+
+            var ex = CX + kx * U, ey = CY - ky * U;
+            if (kx === 0 && ky === 0) {
+                arrow.setAttribute('x2', CX); arrow.setAttribute('y2', CY);
+                arrow.style.display = 'none';
+                originDot.style.display = '';
+                kTag.setAttribute('x', CX + 9); kTag.setAttribute('y', CY - 8);
+                kTag.removeAttribute('text-anchor');
+            } else {
+                arrow.style.display = '';
+                originDot.style.display = 'none';
+                arrow.setAttribute('x2', ex); arrow.setAttribute('y2', ey);
+                var nearR = ex > 185, nearL = ex < 65, nearT = ey < 45;
+                kTag.setAttribute('x', nearR ? ex - 6 : nearL ? ex + 6 : ex);
+                kTag.setAttribute('text-anchor', nearR ? 'end' : nearL ? 'start' : 'middle');
+                kTag.setAttribute('y', nearT ? ey + 18 : ey - 9);
+            }
+            kTag.textContent = 'K[' + fmt(kx) + ',' + fmt(ky) + ']';
+            kNum.innerHTML = '<span class="mi">K</span> [' + fmt(kx) + ',' + fmt(ky) + ']';
             markDone(container);
-        });
-        writeNote(0);
+        }
+        paint();
     }
 
     /* ============================================================
@@ -1386,7 +1473,7 @@
         renderThreeRow: renderThreeRow,
         renderTriangle: renderTriangle,
         renderLookupTable: renderLookupTable,
-        renderSharedWeight: renderSharedWeight,
+        renderKnobMatrix: renderKnobMatrix,
         renderThreeMatrix: renderThreeMatrix,
         renderResidualAdd: renderResidualAdd
     };

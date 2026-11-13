@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>第 10 篇：把算 K 写成系数矩阵</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
-<link href="../css/style.css?v=20261113y" rel="stylesheet"/>
+<link href="../css/style.css?v=20261113z" rel="stylesheet"/>
 </head>
 <body>
 <nav class="nav-bar">
@@ -37,12 +37,8 @@
 <h2>2. 除了转 90°，还能怎么加工</h2>
 <p>把 90° 转法写成矩阵乘法，中间那四个数就是一张系数矩阵，记作 <span class="mi">W<sub>K</sub></span>。把这四个数想成四个可调旋钮：换一组系数，既可以改箭头朝向，也可以改长度。无论哪个位置、哪次查询，用的都是同一张 <span class="mi">W<sub>K</sub></span>。</p>
 <p>写成公式 <span class="mi">K＝XW<sub>K</sub></span>：<span class="mi">X</span> 放各位置输入，<span class="mi">W<sub>K</sub></span> 放共用系数，<span class="mi">K</span> 里是算出的结果。整句 31 行，<span class="mi">W<sub>K</sub></span> 只有 2 行 2 列。</p>
-<figure class="tutorial-figure">
-<img alt="把系数想成四个旋钮，换一组系数就换一种加工办法" class="zoomable" height="688" loading="lazy" src="../assets/images/img-34.webp" width="1100"/>
-<figcaption>四个旋钮，定一种加工。</figcaption>
-</figure>
-<p>静态图先看旋钮。下面这个演示，能直接改四个系数，看矩阵怎么变。</p>
-<div class="demo-card" data-chapter="10" data-station="1" id="sharedWeightDemo"></div>
+<p>下面这个演示，能直接拧四个系数，每个 -1、0、1 三档，看输出怎么变。</p>
+<div class="demo-card" data-chapter="10" data-station="1" id="knobMatrixDemo"></div>
 <div id="soft-2"></div>
 </section>
 <section class="station" data-station-index="2" id="station-2">
@@ -109,12 +105,12 @@
 <a href="chapter-09.html">← 第 9 篇</a>
 <a href="chapter-11.html">第 11 篇 →</a>
 </nav>
-<script src="../js/lightbox.js?v=20261113y"></script>
-<script src="../js/iframeResizer.contentWindow.min.js?v=20261113y"></script>
-<script src="../js/progress.js?v=20261113y"></script>
-<script src="../js/common-ui.js?v=20261113y"></script>
-<script src="../js/demo-interact.js?v=20261113y"></script>
-<script src="../js/step-interact.js?v=20261113y"></script>
+<script src="../js/lightbox.js?v=20261113z"></script>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113z"></script>
+<script src="../js/progress.js?v=20261113z"></script>
+<script src="../js/common-ui.js?v=20261113z"></script>
+<script src="../js/demo-interact.js?v=20261113z"></script>
+<script src="../js/step-interact.js?v=20261113z"></script>
 <script>
         (function () {
             var chapterId = '10';
@@ -122,7 +118,7 @@
             renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
             DemoInteract.renderCandidateFilter(document.getElementById('candidateFilterDemo'));
             StepInteract.renderSwitchQ(document.getElementById('switchQDemo'));
-            StepInteract.renderSharedWeight(document.getElementById('sharedWeightDemo'));
+            StepInteract.renderKnobMatrix(document.getElementById('knobMatrixDemo'));
             StepInteract.renderThreeMatrix(document.getElementById('threeMatrixDemo'));
             for (var i = 1; i <= totalStations; i++) {
                 var m = document.getElementById('soft-' + i);

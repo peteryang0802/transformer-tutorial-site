@@ -2557,6 +2557,46 @@ sup { vertical-align: 0.6em; }
 }
 .sw-note { font-size: 14.5px; color: #b45309; font-weight: 700; line-height: 1.6; margin: 12px 0 0; }
 
+/* ---- 旋钮矩阵（第10章）---- */
+.km-weight-label { font-size: 14px; font-weight: 700; color: #64748b; margin: 14px 0 8px; }
+.km-knobs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.km-knob {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    border: 1.5px solid; border-radius: 12px; padding: 12px 0; cursor: pointer;
+    background: #fff; font-family: inherit; transition: transform .12s, box-shadow .12s;
+}
+.km-knob:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(15,23,42,.14); }
+.km-knob:active { transform: translateY(0); }
+.km-knob-name { font-size: 13px; font-weight: 700; color: #64748b; }
+.km-knob-val { font-size: 24px; font-weight: 800; line-height: 1.1; font-family: "Times New Roman", Georgia, serif; }
+.km-knob.km-pos { border-color: #16a34a; background: #f0fdf4; }
+.km-knob.km-pos .km-knob-val { color: #15803d; }
+.km-knob.km-zero { border-color: #9ca3af; background: #f9fafb; }
+.km-knob.km-zero .km-knob-val { color: #6b7280; }
+.km-knob.km-neg { border-color: #dc2626; background: #fef2f2; }
+.km-knob.km-neg .km-knob-val { color: #b91c1c; }
+
+.km-flow { display: flex; align-items: stretch; gap: 8px; margin-top: 14px; }
+.km-card { flex: 1 1 0; min-width: 0; border: 1.5px solid; border-radius: 12px; padding: 10px 8px; text-align: center; background: #fff; }
+.km-card-label { font-size: 13px; font-weight: 700; margin: 0 0 8px; }
+.km-in { border-color: #3b82f6; display: flex; flex-direction: column; justify-content: center; }
+.km-in .km-card-label { color: #2563eb; }
+.km-out { border-color: #8b5cf6; flex: 1.35 1 0; }
+.km-out .km-card-label { color: #7c3aed; }
+.km-vec { display: flex; justify-content: center; gap: 6px; }
+.km-vec-num {
+    min-width: 40px; padding: 8px 0; border-radius: 8px;
+    background: #eff6ff; color: #1d4ed8; font-size: 18px; font-weight: 800;
+    font-family: "Times New Roman", Georgia, serif;
+}
+.km-sign { display: flex; align-items: center; font-size: 22px; font-weight: 800; color: #94a3b8; }
+.km-svg { width: 100%; height: auto; display: block; }
+.km-grid { stroke: #e5e7eb; stroke-width: 1; }
+.km-axis { stroke: #9ca3af; stroke-width: 1.5; }
+.km-axis-label { font-size: 12px; fill: #6b7280; font-family: Consolas, monospace; font-weight: 700; }
+.km-tag { font-size: 12px; font-weight: 700; font-family: Consolas, monospace; }
+.km-k { font-size: 16px; font-weight: 800; color: #6d28d9; margin: 8px 0 0; font-family: "Times New Roman", Georgia, serif; }
+
 /* ---- 三矩阵 ---- */
 .tm-grid { display: flex; gap: 8px; margin: 8px 0; }
 .tm-card {
@@ -2625,6 +2665,19 @@ sup { vertical-align: 0.6em; }
   .sw-weight-label { color: #94a3b8; }
   .sw-cell { background: #78350f; color: #fde68a; border-color: #b45309; }
   .sw-note { color: #fcd34d; }
+  .km-weight-label, .km-knob-name { color: #94a3b8; }
+  .km-knob { background: #1f2937; }
+  .km-knob.km-pos { background: #052e16; }
+  .km-knob.km-pos .km-knob-val { color: #4ade80; }
+  .km-knob.km-zero { background: #111827; }
+  .km-knob.km-zero .km-knob-val { color: #9ca3af; }
+  .km-knob.km-neg { background: #450a0a; }
+  .km-knob.km-neg .km-knob-val { color: #fca5a5; }
+  .km-card { background: #1f2937; }
+  .km-grid { stroke: #374151; }
+  .km-axis-label { fill: #9ca3af; }
+  .km-vec-num { background: #0c4a6e; color: #bae6fd; }
+  .km-k { color: #c4b5fd; }
   .ra-line-label { color: #94a3b8; }
   .ra-num.in { background: #0c4a6e; color: #bae6fd; }
   .ra-num.delta { background: #713f12; color: #fde68a; }
