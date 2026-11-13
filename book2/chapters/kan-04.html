@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 4 坎：损失——一个数说清猜得有多差</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 4 坎　损失：一个数说清猜得有多差</h1>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一坎，机器给每个候选打了分，转成概率，最后挑了一个。</p>
+<p>可它挑得对不对、有多离谱？现在全凭感觉，没法衡量。</p>
+<p>训练得有个明确目标，机器才知道往哪儿使劲。这一坎，咱们立一个数，专门说它猜得有多差。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>用一个数衡量预测好坏，弄明白损失为什么是 -log(正确答案概率)，以及它怎么当训练的指挥棒。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 12 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 先立个“差劲儿分数”</h2>
+<p>咱们先想，这个数该怎么定。</p>
+<p>机器猜完，正确答案是知道的。咱们就盯着它给正确答案的那个概率。</p>
+<p>给正确答案 0.9，说明挺有把握，猜得不错；只给 0.1，说明心里没底，猜得很烂。</p>
+<p>这个数得反映“它离正确答案有多远”。咱们管它叫 <strong>损失</strong>。损失越大，猜得越差。</p>
+<p>注意方向：损失是“差劲儿分数”，咱们要的是让它越来越小。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 为什么是 -log(概率)</h2>
+<p>直接拿概率行不行？有个别扭的地方：概率越大越好，可损失要越小越好，方向反了。</p>
+<p>咱们用一个叫 log 的函数，规矩是这样：</p>
+<div class="formula">损失 = -log(正确答案的概率)</div>
+<p>别被公式吓住，看几个数：</p>
+<ul class="bullet-list">
+<li>概率 0.9，损失约 0.1，很小。</li>
+<li>概率 0.5，损失约 0.7。</li>
+<li>概率 0.1，损失约 2.3，挺大。</li>
+<li>概率接近 0，损失能冲到天上去。</li>
+</ul>
+<p>这个公式有个好处：它把“没把握还瞎猜”罚得特别狠。</p>
+<p>这里的 log 是自然对数，底数是 e。咱们现在一道题算一个 -log(概率)，这是交叉熵在单个词上的样子；真到一整本，会把每个词的损失加起来，再平均。</p>
+<p>还得说清楚：这个损失衡量的是“它给正确答案的概率有多低”，不是两个词意思上离得有多远。它管概率，不管语义。</p>
+<p>这就是 <strong>交叉熵</strong>。名字唬人，干的就是“给正确答案的概率打分”这件事。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 损失是训练的指挥棒</h2>
+<p>这个数有了，它能干啥？它就是后面整个训练的指挥棒。</p>
+<p>一道题算一个损失，机器的目标就一句话：想办法把这个损失往下降。</p>
+<p>怎么降？这正是后面两坎的事——先看损失怎么把责任推回去（反向传播），再看参数怎么跟着改（更新）。</p>
+<p>你先记住：训练，就是一场想方设法把损失降下来的过程。</p>
+<p>下面这个计算器，你拖动滑块调正确答案的概率，看损失怎么跟着变。</p>
+
+<div class="demo-card" id="lossDemo"></div>
+<div id="soft-3"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：损失这个“差劲儿分数”，还有交叉熵公式 -log(正确答案概率)。</p>
+<p>下一坎接着看：损失算出来了，可它怎么知道，是哪个参数把事情搞砸的？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-03.html">← 第 3 坎：打分与防偷看</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-05.html">第 5 坎：反向传播 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-04.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '04';
+    var totalStations = 3;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    LossDemo.render(document.getElementById('lossDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>术语表：这一路的名词，大白话再讲一遍</title>
+<link href="favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="index.html">← 返回目录</a>
+</nav>
+
+<h1>术语表</h1>
+<p>这一路冒出来的名词，都在这儿，用大白话再讲一遍。忘了某个词，回来翻就行。</p>
+
+<div class="glossary-search">
+<input id="glossaryFilter" type="search" placeholder="搜个词，比如“梯度”“温度”…" aria-label="过滤术语"/>
+</div>
+
+<div id="glossaryGroups"></div>
+
+<p class="tip-text" id="glossaryEmpty" style="display:none;">没搜到对应的词，换个说法试试。</p>
+
+<nav class="nav-bar">
+<a href="index.html">返回目录</a>
+</nav>
+
+<script>
+const GROUPS = [
+  { name: '阶段一　把童话喂进去', items: [
+    ['token（词块）', '模型眼里最小的一块文字，可以是一个词、半个词，或者一个标点。'],
+    ['词表（vocabulary）', '模型认识的全部 token 的清单，每个 token 配一个编号。'],
+    ['BPE（字节对合并）', '一种切词办法：先切得很碎，再把常一起出现的两块一次次合并。'],
+    ['BOS / EOS', '两个特殊标记，分别表示一句话的开头和结尾。']
+  ]},
+  { name: '阶段二　最小闭环', items: [
+    ['logits（打分）', '模型给每个候选词算的原始分数，还没变成概率。'],
+    ['softmax', '把一串打分换算成都在 0 到 1 之间、加起来正好等于 1 的概率。'],
+    ['概率', '某个词被选中的可能性有多大。'],
+    ['因果掩码', '一道“防偷看”的挡板，让每个位置只能看前面，不能看后面。'],
+    ['损失', '一个数，说清这一轮猜得有多差，越大越差。'],
+    ['交叉熵', '一种常用的损失算法：正确答案的概率越低，损失越大。'],
+    ['梯度', '每个参数对损失负多少责任，带着方向和大小。'],
+    ['反向传播', '从损失出发，沿计算链往回走，一次把所有梯度算出来。'],
+    ['链式法则', '往回传责任的规矩：每环责任等于“上传来的责任 × 这一环的关系”。'],
+    ['学习率', '每次更新迈多大步子的那个比例。'],
+    ['更新', '所有参数照着自己梯度的反方向，同时挪一小步。']
+  ]},
+  { name: '阶段三　能加深，能稳住', items: [
+    ['残差连接', '给深层留的快车道，把输入直接加到输出上，信号不容易丢。'],
+    ['层归一化（LayerNorm）', '把一层的数按均值、标准差拉回整齐的尺度，训练更稳。']
+  ]},
+  { name: '阶段四　从一小段到一整本', items: [
+    ['训练 / 验证 / 测试集', '分别用来学、用来调、最后才用来考的三批数据。'],
+    ['过拟合', '模型背下了训练题，没见过的题反而做不好。'],
+    ['批量（batch）', '一次拿几道题一起算，梯度平均后再更新。'],
+    ['padding', '给长短不一的句子补占位符，凑成一样长。'],
+    ['泛化', '在没见过的新数据上，还能不能做好。'],
+    ['困惑度', '一个数衡量模型接话的平均把握，越小越靠谱；得在同一套前提底下才能比。']
+  ]},
+  { name: '阶段五　规模与工程', items: [
+    ['规模定律', '模型、数据、算力变大，整体表现大致跟着变好的经验趋势。'],
+    ['混合精度', '不同环节用不同精度的数，省显存，又尽量不掉精度。'],
+    ['涌现', '能力在规模过了某个坎之后才明显冒出来的现象，原因还在讨论。'],
+    ['AdamW', '带权重衰减的 Adam 优化器，工程上常用。']
+  ]},
+  { name: '阶段六　搅拌与交付', items: [
+    ['解码', '从一个开头出发，一个词一个词往外接，直到结尾。'],
+    ['贪心解码', '每次都选概率最高的词，最稳，但容易死板。'],
+    ['温度', '调概率分布尖锐程度的旋钮：低了保守，高了大胆。'],
+    ['top-k', '只在概率最高的 k 个词里挑，其余不许。'],
+    ['top-p（核采样）', '把概率从高到低加，凑够一个比例就打住，只在这堆里挑。'],
+    ['KV 缓存', '把算过的注意力键值存起来复用，省得每接一个词都从头算。'],
+    ['SFT（监督微调）', '拿“问题—好回答”的样板，再教它说话的规矩。'],
+    ['RLHF', '人给回答排名，让模型朝人喜欢的方向调整。'],
+    ['DPO', '直接用“好回答比差回答强”这个偏好来调，省掉单独的打分官。'],
+    ['幻觉', '一本正经地说些没依据的事，因为它学的是“接得像”，不是“说得对”。'],
+    ['RAG（检索增强）', '回答前先去资料里翻依据，像开卷考试，不是再训练模型。'],
+    ['安全边界', '让模型懂得拒绝有害、违规的请求。'],
+    ['量化', '把参数换成更省的表示，个头变小、跑得更快，精度掉得不多。'],
+    ['公共基准', '业界公认的题集，用来跟别的模型同一套题比。']
+  ]}
+];
+
+const root = document.getElementById('glossaryGroups');
+GROUPS.forEach(function (g) {
+  const card = document.createElement('div');
+  card.className = 'demo-card glossary-group';
+  const h = document.createElement('h3');
+  h.textContent = g.name;
+  h.style.marginTop = '0';
+  card.appendChild(h);
+  g.items.forEach(function (it) {
+    const row = document.createElement('div');
+    row.className = 'glossary-item';
+    const term = document.createElement('span');
+    term.className = 'glossary-term';
+    term.textContent = it[0];
+    const def = document.createElement('span');
+    def.className = 'glossary-def';
+    def.textContent = it[1];
+    row.appendChild(term);
+    row.appendChild(def);
+    row.dataset.text = (it[0] + it[1]).toLowerCase();
+    card.appendChild(row);
+  });
+  root.appendChild(card);
+});
+
+const filter = document.getElementById('glossaryFilter');
+const empty = document.getElementById('glossaryEmpty');
+filter.addEventListener('input', function () {
+  const q = filter.value.trim().toLowerCase();
+  let anyVisible = false;
+  document.querySelectorAll('.glossary-group').forEach(function (card) {
+    let groupHas = false;
+    card.querySelectorAll('.glossary-item').forEach(function (row) {
+      const show = !q || row.dataset.text.indexOf(q) >= 0;
+      row.style.display = show ? '' : 'none';
+      if (show) groupHas = true;
+    });
+    card.style.display = groupHas ? '' : 'none';
+    if (groupHas) anyVisible = true;
+  });
+  empty.style.display = anyVisible ? 'none' : 'block';
+});
+</script>
+</body>
+</html>

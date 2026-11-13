@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 14 坎：后训练——让它更听话、更靠谱</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 14 坎　后训练：让它更听话、更靠谱</h1>
+
+<div class="illu">
+<svg viewBox="0 0 400 200" role="img" aria-label="回答前先去资料里翻依据，带着引用回答，像开卷考试" xmlns="http://www.w3.org/2000/svg">
+<title>RAG：开卷找依据</title>
+<defs>
+<linearGradient id="k14bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#eff6ff"/><stop offset="1" stop-color="#e0e7ff"/>
+</linearGradient>
+</defs>
+<rect width="400" height="200" rx="16" fill="url(#k14bg)"/>
+
+<!-- 问题气泡 -->
+<rect x="22" y="80" width="72" height="56" rx="16" fill="#ffffff" stroke="#bfdbfe" stroke-width="2"/>
+<text x="58" y="119" font-size="30" font-weight="700" fill="#3b82f6" text-anchor="middle" font-family="system-ui">?</text>
+
+<!-- 箭头 -->
+<path d="M100 108 h16" stroke="#94a3b8" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M116 101 l9 7 -9 7" stroke="#94a3b8" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+<!-- 打开的资料书 -->
+<rect x="138" y="98" width="36" height="46" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
+<rect x="174" y="98" width="36" height="46" rx="4" fill="#fef3c7" stroke="#fcd34d" stroke-width="2"/>
+<line x1="174" y1="98" x2="174" y2="144" stroke="#d97706" stroke-width="2"/>
+<g stroke="#d97706" stroke-width="2" stroke-linecap="round" opacity="0.7">
+<line x1="144" y1="110" x2="168" y2="110"/><line x1="144" y1="120" x2="168" y2="120"/><line x1="144" y1="130" x2="162" y2="130"/>
+<line x1="180" y1="110" x2="204" y2="110"/><line x1="180" y1="120" x2="204" y2="120"/><line x1="180" y1="130" x2="198" y2="130"/>
+</g>
+<!-- 放大镜 -->
+<circle cx="174" cy="82" r="15" fill="none" stroke="#6366f1" stroke-width="4"/>
+<line x1="185" y1="93" x2="198" y2="106" stroke="#6366f1" stroke-width="4" stroke-linecap="round"/>
+
+<!-- 箭头 -->
+<path d="M216 108 h16" stroke="#94a3b8" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M232 101 l9 7 -9 7" stroke="#94a3b8" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+<!-- 回答气泡（带依据） -->
+<rect x="292" y="76" width="86" height="64" rx="16" fill="#dcfce7" stroke="#86efac" stroke-width="2"/>
+<path d="M312 108 l8 8 l16 -18" stroke="#10b981" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="348" y="92" width="18" height="22" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+<line x1="353" y1="100" x2="361" y2="100" stroke="#d97706" stroke-width="1.5"/>
+<line x1="353" y1="107" x2="361" y2="107" stroke="#d97706" stroke-width="1.5"/>
+</svg>
+<p class="illu-caption">回答前先去资料里翻依据，带着引用开口，像开卷考试——这是检索，不是再训练。</p>
+</div>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一坎，童话搅拌机已经能一个词一个词往外接了。</p>
+<p>可刚练出来的模型，只会照着语料接话，你问它问题，它未必懂规矩，还可能一本正经地瞎编。</p>
+<p>这一坎，咱们看怎么再调教一番，让它更听话、更靠谱。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>怎么让模型照着规矩说话、怎么让它合人意少瞎编，以及怎么给它配上参考书。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 13 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 先教它照着规矩说话</h2>
+<p>刚训练完的模型，本事是“接下一个词”，并不知道你想让它干嘛。你问它，它可能接着你的话往下编，而不是回答。</p>
+<p>第一步调教叫 <strong>监督微调（SFT）</strong>：准备一批样板——问题长这样，好回答就该是这样，一对一对喂给它。</p>
+<p>它在样板上再练一轮，就学会了规矩：这是个问题，该给个回答；人这么说话，该照这个路数来。</p>
+<p>教完，它就从只会接话的模型，变成能听懂招呼、能照格式办事的助手。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 让它合人意，还得防它瞎编</h2>
+<p>同一个问题，回答有好有坏。<strong>RLHF</strong> 就是让人当裁判：答好几个，人给排名，再练个“打分官”，让模型照人喜欢的方向调整。</p>
+<p>更省事的 <strong>DPO</strong>，不用单独练打分官，直接拿“好回答比差回答强”这个偏好就能调。</p>
+<p>有个绕不开的麻烦，叫 <strong>幻觉</strong>：它会一本正经地说些没依据的事，因为它的本事是“接得像”，不是“说得对”。</p>
+<p>还记得第 13 坎那个说法吗——它把语料压缩进了参数，压缩是有损的，压丢的地方，就成了幻觉。</p>
+<p>关键的事，得找地方核实。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站（选读） -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 选读：给它配个参考书，再划个安全边界 <span class="track-badge track-optional">选读</span></h2>
+<p>这一站是选读，时间紧可以先跳过，不影响主线。想知道它怎么“开卷考试”、怎么守规矩，再展开看。</p>
+
+<details class="collapse">
+<summary>展开看：RAG 怎么配参考书、安全边界怎么划</summary>
+<div class="collapse-content">
+<p><strong>RAG（检索增强）</strong>：这不是再训练模型，而是每次回答前，先去备好的资料里翻一翻，把相关内容捞出来，再照着依据回答。就像开卷考试，手边有参考书。</p>
+<p>不过它不保证就不瞎编——要是检索压根没找对资料，或者它没老老实实照着引用，照样可能说错。所以关键还得看“找得准不准、引用忠不忠实”。</p>
+<p>梗概卡片、“如果会怎样”的问答，就是这个思路的小彩蛋：让它基于读过的童话来总结、来推想。</p>
+<p>还得立 <strong>安全边界</strong>：让它懂得拒绝有害、违规的请求。</p>
+<p>这些手段，都是在“能用”之上，让它“好用、敢用”。</p>
+
+<div class="demo-card" id="postTrainDemo"></div>
+</div>
+</details>
+<div id="soft-3"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：SFT、RLHF/DPO、幻觉和 RAG，还有安全边界。</p>
+<p>最后一坎：怎么把这台机器存下来、评估好，交到别人手里也能用？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-13.html">← 第 13 坎：童话搅拌机</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-15.html">第 15 坎：保存评估交付 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-14.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '14';
+    var totalStations = 3;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    PostTrainDemo.render(document.getElementById('postTrainDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

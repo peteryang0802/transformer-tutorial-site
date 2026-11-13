@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 10 坎：批量——一次多看几道题</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 10 坎　批量：一次多看几道题</h1>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一坎，咱们学会了把数据分堆，认出了过拟合。</p>
+<p>可前面的更新是一道题改一次，效率不高，还容易被单道题带偏。</p>
+<p>这一坎，咱们看怎么一次多看几道，让每一步都更稳当。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>怎么把一批题的梯度平均，长短不一的句子怎么补齐，还有一个更聪明的更新办法。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 14 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 一次看一批，梯度平均</h2>
+<p>单看一道题就改参数，这道题要是偏，参数就被带偏，下一步又被另一道题拽回来，走得一颠一颠的。</p>
+<p>换个办法：一次抓一小批，先各自算出梯度，再把它们平均成一个，参数照着平均梯度更新一次。</p>
+<p>单道题的偏门互相抵消，方向更稳，也少折腾好几回。</p>
+<p>这一批叫一个 <strong>batch</strong>，一次看几道，叫 <strong>批量大小</strong>。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 句子长短不一，补齐再打补丁</h2>
+<p>一整本童话，句子有长有短，没法整整齐齐摞一块儿算。</p>
+<p>那就补齐：短句子后面填空位，让大家一样长，这叫 <strong>padding</strong>，填的叫填充符。</p>
+<p>可这些填的是假的，不能让它们参与计算。于是再立一个 <strong>填充掩码</strong>：真词放行，填的空位标出来，算的时候把它们的影响抹掉。</p>
+<p>这跟因果掩码是一个思路，都是用一道掩码，把不该看的挡住。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 批量大小，也是个权衡</h2>
+<p>太小，比如就 1 道，平均了个寂寞，方向还是抖。</p>
+<p>太大，一次塞几百道，每步算半天，同样数据量下迈步次数变少，反而学得慢。</p>
+<p>所以取个中间的、机器算得动的大小，稳当又不拖沓。</p>
+<p>下面这个演示，先看几道题的梯度怎么平均，再看长短句子怎么补齐。</p>
+
+<div class="demo-card" id="batchDemo"></div>
+<div id="soft-3"></div>
+</section>
+
+<!-- 第 4 站 -->
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 更聪明的更新办法：Adam（翻现实手册）</h2>
+<p>前面更新一直是“照着梯度反方向走”，学习率固定。现实里有个更聪明的办法，叫 <strong>Adam</strong>。</p>
+<p>它的心思是：每个参数，根据自己梯度最近的表现，自动调节步子。老在一个方向使劲的，给它顺顺；梯度忽大忽小、方向乱的，就压一压。</p>
+<p>它能把每个参数的相对步子，自动理得比较稳。可你别误会，全局学习率这个大开关，还是得你自己挑一个合适的，Adam 不是啥都不用管。咱们后面做两层模型，就用它。</p>
+<p>具体怎么算的不用深究，记着它“照着近期梯度，给每个参数调相对步子”就行。</p>
+<div id="soft-4"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：梯度平均、padding 和填充掩码，还有 Adam 这个自动调步子的帮手。</p>
+<p>下一坎接着看：它在没见过的题上，到底行不行，又怎么用一个数说清它“困惑”不“困惑”？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-09.html">← 第 9 坎：过拟合</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-11.html">第 11 坎：泛化与困惑度 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-10.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '10';
+    var totalStations = 4;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    BatchDemo.render(document.getElementById('batchDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

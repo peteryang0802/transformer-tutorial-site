@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 3 坎：打分与防偷看</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 3 坎　打分与防偷看</h1>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>题出好了，一道一道摆在那儿：看前面的词，猜下一个。</p>
+<p>可机器拿什么猜？它得先给每个候选打个分，再挑一个。</p>
+<p>这一坎前半段是第一册的老本事，咱们快速过。后半段有个新坑：训练时它要是偷看了后面的词，可就坏了。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>输出层打分、softmax 转概率；还有因果掩码怎么挡住后面的词，防止它作弊。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 11 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 先给候选打分（第一册回顾）</h2>
+<p>第一册最后一坎，咱们做过这件事。</p>
+<p>机器手里有一组数，是前面的词算出来的。它拿这组数，给词表里每个候选乘一乘、加一加，得到一个分。</p>
+<p>这个分叫 logit，先别管名字，就是“打分”。</p>
+<p>分有高有低，不能直接用。再用 softmax 把所有分转成概率，加起来正好等于 1。哪个候选概率高，就接哪个。</p>
+<div class="formula">打分（logit）→ softmax → 概率</div>
+<p>这一步第一册细讲过，你记着这条链就行。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 一个致命的漏洞：它会偷看</h2>
+<p>现在说新坑。</p>
+<p>咱们的题是“看前面，猜下一个”。注意，是<strong>只准看前面</strong>。</p>
+<p>可机器算的时候，是把整句话一起喂进去的。后面那些词，明明是答案，就明晃晃摆在那儿。</p>
+<p>这就好比考试，答案印在卷子下半截，你让学生别偷看——他肯定偷看。</p>
+<p>更隐蔽的是，它偷看以后，训练损失还挺好看，你以为它学会了，其实它是抄的。一到真要它接没见过的话，后面没答案可抄，立马露馅。</p>
+<p>这不是小毛病，是必须从根上堵死的漏洞。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 因果掩码：把后面挡住</h2>
+<p>怎么堵？立一道墙。这道墙叫 <strong>因果掩码</strong>。</p>
+<p>规矩很简单：每个位置，只许看它自己和它前面的，后面的一律挡住，一个字都不许看。</p>
+<p>具体怎么挡？算的时候，把后面位置的分设成负无穷（或者小到取指数后正好等于 0），softmax 一过，那些位置的概率就严格成了 0，等于不存在。</p>
+<p>下面这个演示，你点两个标签看那张掩码格子怎么变。绿格子是看得见的，红叉是被挡住的。</p>
+<p>挡住以后你会发现，右上角全是叉——后面的词，一个都漏不过来。</p>
+
+<div class="demo-card" id="maskDemo"></div>
+<div id="soft-3"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：打分转概率这条链，还有因果掩码这道“只准看前面”的墙。</p>
+<p>下一坎接着看：它打完分、猜完了，怎么用一个数，说清它到底猜得有多差？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-02.html">← 第 2 坎：出题</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-04.html">第 4 坎：损失 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-03.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '03';
+    var totalStations = 3;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    MaskDemo.render(document.getElementById('maskDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

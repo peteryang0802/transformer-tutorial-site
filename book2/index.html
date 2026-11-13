@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第二册：亲手搭一个能用的小 LLM</title>
+<link href="favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回总封面</a>
+<a href="#goal">目标</a>
+<a href="#map">15 坎地图</a>
+<a href="glossary.html">术语表</a>
+</nav>
+
+<h1>第二册　亲手搭一个能用的小 LLM</h1>
+
+<div class="illu">
+<svg viewBox="0 0 400 230" role="img" aria-label="童话魔法锅：把童话元素丢进锅里，搅出融合小段" xmlns="http://www.w3.org/2000/svg">
+<title>童话魔法锅</title>
+<defs>
+<linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#eef2ff"/><stop offset="1" stop-color="#e0f2fe"/>
+</linearGradient>
+<linearGradient id="potGrad" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#4338ca"/>
+</linearGradient>
+<linearGradient id="flameGrad" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#fde047"/><stop offset="1" stop-color="#f97316"/>
+</linearGradient>
+</defs>
+
+<rect width="400" height="230" rx="16" fill="url(#bgGrad)"/>
+<circle cx="60" cy="40" r="5" fill="#ffffff" opacity="0.8"/>
+<circle cx="345" cy="120" r="6" fill="#ffffff" opacity="0.7"/>
+<circle cx="70" cy="150" r="4" fill="#a5b4fc" opacity="0.7"/>
+
+<!-- 蒸汽魔法曲线 -->
+<path d="M172 116 q-12 -14 0 -28 q12 -14 0 -26" stroke="#c7d2fe" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M228 116 q12 -14 0 -28 q-12 -14 0 -26" stroke="#c7d2fe" stroke-width="4" fill="none" stroke-linecap="round"/>
+
+<!-- 飘出的元素 -->
+<path d="M150 30 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#fbbf24"/>
+<path d="M252 34 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#fbbf24"/>
+
+<!-- 火柴 -->
+<line x1="112" y1="86" x2="112" y2="64" stroke="#92400e" stroke-width="4" stroke-linecap="round"/>
+<path d="M112 62 q-8 9 0 15 q8 -6 0 -15 z" fill="#f97316"/>
+
+<!-- 水晶鞋 -->
+<path d="M182 52 q0 -5 5 -5 h16 q4 0 4 4 l-3 7 h-19 z" fill="#3b82f6"/>
+<rect x="200" y="58" width="3" height="9" rx="1" fill="#1d4ed8"/>
+<circle cx="188" cy="49" r="2" fill="#bfdbfe"/>
+
+<!-- 雪花 -->
+<g stroke="#0891b2" stroke-width="4" stroke-linecap="round">
+<line x1="278" y1="74" x2="300" y2="74"/>
+<line x1="283" y1="65" x2="295" y2="83"/>
+<line x1="295" y1="65" x2="283" y2="83"/>
+</g>
+
+<!-- 锅把手 -->
+<path d="M130 134 q-17 2 -15 19" stroke="#4338ca" stroke-width="7" fill="none" stroke-linecap="round"/>
+<path d="M270 134 q17 2 15 19" stroke="#4338ca" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+<!-- 锅身 -->
+<path d="M132 128 v32 a68 68 0 0 0 136 0 v-32 z" fill="url(#potGrad)"/>
+<ellipse cx="200" cy="128" rx="68" ry="15" fill="#312e81"/>
+<ellipse cx="200" cy="128" rx="68" ry="15" fill="none" stroke="#818cf8" stroke-width="3"/>
+<path d="M160 160 q40 18 80 0" stroke="#818cf8" stroke-width="3" fill="none" opacity="0.5"/>
+
+<!-- 火焰 -->
+<path d="M176 210 q-9 -9 0 -19 q9 10 0 19 z" fill="#fbbf24"/>
+<path d="M224 210 q-9 -9 0 -19 q9 10 0 19 z" fill="#fbbf24"/>
+<path d="M200 212 q-13 -13 0 -28 q13 15 0 28 z" fill="url(#flameGrad)"/>
+</svg>
+<p class="illu-caption">把童话里的元素丢进魔法锅，火候一拧，搅出一段融合的新片段。</p>
+</div>
+
+<p>第一册咱们把 Transformer 的核心算法摸了一遍。可那台机器，参数还是随机的，一开口就是“买了买了”这种废话。</p>
+<p>这一册，咱们接着干一件更带劲的事：<strong>亲手搭一个能保存、能拿出来用的小 LLM</strong>。它读的是安徒生童话，一路要跨过 15 道坎。</p>
+
+<div id="continueWrap" style="margin:16px 0;"></div>
+
+<div class="demo-card" id="onboarding">
+<p class="demo-title">上车前，先看这几眼</p>
+<ul class="bullet-list">
+<li><strong>要啥基础</strong>：会基本的加减乘除就行，不用会编程，代码都给你拆成能看懂的样子。</li>
+<li><strong>最好先读第一册</strong>：《从一句话构建 Transformer 核心算法》。没读也能跟着走，就是个别地方得多琢磨两下。</li>
+<li><strong>大概要多久</strong>：15 坎，每坎十来分钟，总共 3 到 4 小时。分几次读也行，进度自动存在你浏览器里，随时能接着来。</li>
+<li><strong>怎么读最顺</strong>：每坎先动手玩一玩演示，再往下读，别光看字。</li>
+</ul>
+</div>
+
+<div class="demo-card" id="goal">
+<p class="demo-title">北极星：童话搅拌机</p>
+<p>先把这一趟的终点说清楚。</p>
+<p>架子上摆着各篇童话的家伙事儿：水晶鞋、南瓜马车、火柴、奶奶、雪花。你挑两篇童话丢进锅里，拧一拧“温度”，它就给你搅出一小段，把两篇的东西揉在一块儿。</p>
+<p>话得说在前头：这小模型个头不大，写不出完整的童话，搅出来的是“元素级”的一小段，看着像那么回事，细看还乱。完整的长故事，得靠更大的模型。咱们这一路，就是看着它的本事怎么一点点长出来。</p>
+</div>
+
+<div class="demo-card" id="identityGuide">
+<p class="demo-title">先交个底：哪些是真算，哪些是打比方</p>
+<p>每个演示都挂着标签，玩到就懂，不用现在记。</p>
+<div class="identity-legend">
+<div class="identity-tag tag-real"><span class="identity-dot"></span><span class="identity-label">真实计算</span></div>
+<p>真在你浏览器里算，第 13 坎真训练、第 15 坎文件能真下载。</p>
+</div>
+<div class="identity-legend">
+<div class="identity-tag tag-sim"><span class="identity-dot"></span><span class="identity-label">模拟示意</span></div>
+<p>为讲清单个道理做的简化，道理是真的，架子是借的。</p>
+</div>
+</div>
+
+<h2 id="map">15 坎地图（分 6 段）</h2>
+<div id="stageMap"></div>
+
+<p class="tip-text">进度都存在你自己的浏览器里，不用注册。每坎都有能动手的小演示，第 6 坎是第一个完整的训练台。</p>
+<div id="backupWrap" style="margin:12px 0;"></div>
+
+<script src="js/progress.js?v=20261114r1"></script>
+<script src="js/common-ui.js?v=20261114r1"></script>
+<script>
+// 阶段与坎的元数据
+const STAGES = [
+  { name: '一　把童话喂进去', intro: '先解决文字怎么进机器。', kans: [
+    { id: 1,  title: '切书：把一本童话切成小碎块', file: 'chapters/kan-01.html', stations: 3 },
+    { id: 2,  title: '出题：让机器自己给自己出题', file: 'chapters/kan-02.html', stations: 3 }
+  ]},
+  { name: '二　最小闭环', intro: '预测、损失、反向、更新，先让它学会一次。', kans: [
+    { id: 3,  title: '打分与防偷看', file: 'chapters/kan-03.html', stations: 3 },
+    { id: 4,  title: '损失：一个数说清差多少', file: 'chapters/kan-04.html', stations: 3 },
+    { id: 5,  title: '反向传播：把责任分回去', file: 'chapters/kan-05.html', stations: 4 },
+    { id: 6,  title: '更新：亲手让它学会一次', file: 'chapters/kan-06.html', stations: 4 }
+  ]},
+  { name: '三　能加深，能稳住', intro: '把机器做厚，还得训得动。', kans: [
+    { id: 7,  title: '残差连接：给深层留条快车道', file: 'chapters/kan-07.html', stations: 3 },
+    { id: 8,  title: '层归一化：把尺度理整齐', file: 'chapters/kan-08.html', stations: 3 }
+  ]},
+  { name: '四　从一小段到一整本', intro: '数据多了，新麻烦也来了。', kans: [
+    { id: 9,  title: '数据划分：别让它死记硬背', file: 'chapters/kan-09.html', stations: 3 },
+    { id: 10, title: '批量：一次多看几道题', file: 'chapters/kan-10.html', stations: 4 },
+    { id: 11, title: '泛化与困惑度：没见过的题会不会', file: 'chapters/kan-11.html', stations: 3 }
+  ]},
+  { name: '五　翻现实手册', intro: '看看工业界怎么把小机器变大。', kans: [
+    { id: 12, title: '规模与工程：小机器怎么变大', file: 'chapters/kan-12.html', stations: 3 }
+  ]},
+  { name: '六　搅拌与交付', intro: '走到北极星，再把东西交出去。', kans: [
+    { id: 13, title: '解码与童话搅拌机', file: 'chapters/kan-13.html', stations: 4 },
+    { id: 14, title: '后训练：教它好好说话', file: 'chapters/kan-14.html', stations: 3 },
+    { id: 15, title: '保存、评估、交付', file: 'chapters/kan-15.html', stations: 3 }
+  ]}
+];
+
+const mapEl = document.getElementById('stageMap');
+STAGES.forEach(function (st) {
+  var card = document.createElement('div');
+  card.className = 'demo-card';
+  var h = document.createElement('h3');
+  h.textContent = st.name;
+  h.style.marginTop = '0';
+  card.appendChild(h);
+  var intro = document.createElement('p');
+  intro.className = 'tip-text';
+  intro.textContent = st.intro;
+  card.appendChild(intro);
+
+  var list = document.createElement('ul');
+  list.className = 'chapter-list';
+  st.kans.forEach(function (k) {
+    var cid = String(k.id).padStart(2, '0');
+    var li = document.createElement('li');
+    var a = document.createElement('a');
+    a.href = k.file;
+    a.textContent = '第 ' + k.id + ' 坎　' + k.title;
+    li.appendChild(a);
+    li.appendChild(makeBadge(chapterStatus(cid, k.stations), cid, k.stations));
+    list.appendChild(li);
+  });
+  card.appendChild(list);
+  mapEl.appendChild(card);
+});
+
+function makeBadge(status, cid, stations) {
+  var badge = document.createElement('span');
+  badge.className = 'status-badge';
+  if (status === 'done') {
+    badge.classList.add('badge-done');
+    badge.textContent = '已点亮';
+  } else if (status === 'in-progress') {
+    badge.classList.add('badge-progress');
+    badge.textContent = '进行中 ' + litCount(cid) + '/' + stations;
+  } else {
+    badge.classList.add('badge-notstarted');
+    badge.textContent = '未开始';
+  }
+  return badge;
+}
+
+// 续读按钮
+var target = getContinueTarget();
+if (target) {
+  var cid = target.chapterId;
+  var file = 'chapters/kan-' + String(cid).padStart(2, '0') + '.html';
+  var wrap = document.getElementById('continueWrap');
+  var btn = document.createElement('button');
+  btn.className = 'run-btn';
+  btn.textContent = '接着上次读 →';
+  btn.addEventListener('click', function () {
+    window.location.href = file + '#station-' + target.station;
+  });
+  wrap.appendChild(btn);
+}
+
+// 进度备份 / 恢复（换设备时用）
+(function () {
+  var backupWrap = document.getElementById('backupWrap');
+
+  var exportBtn = document.createElement('button');
+  exportBtn.className = 'run-btn';
+  exportBtn.textContent = '备份我的进度';
+  exportBtn.addEventListener('click', function () {
+    var blob = new Blob([exportProgress()], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'llm-lab-progress.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+  backupWrap.appendChild(exportBtn);
+
+  var importBtn = document.createElement('button');
+  importBtn.className = 'run-btn';
+  importBtn.textContent = '从备份恢复';
+  var fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'application/json,.json';
+  fileInput.style.display = 'none';
+  importBtn.addEventListener('click', function () { fileInput.click(); });
+  fileInput.addEventListener('change', function () {
+    var f = fileInput.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      if (importProgress(reader.result)) {
+        window.location.reload();
+      } else {
+        alert('这个文件不是有效的进度存档，没恢复成。');
+      }
+    };
+    reader.readAsText(f);
+  });
+  backupWrap.appendChild(importBtn);
+  backupWrap.appendChild(fileInput);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 9 坎：数据划分与过拟合</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 9 坎　数据划分与过拟合：别让它死记硬背</h1>
+
+<div class="illu">
+<svg viewBox="0 0 400 200" role="img" aria-label="左边死记硬背练习册、新题出错；右边理解了、新题打勾" xmlns="http://www.w3.org/2000/svg">
+<title>过拟合 vs 泛化</title>
+<defs>
+<linearGradient id="k9bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#fef2f2"/><stop offset="1" stop-color="#fce7f3"/>
+</linearGradient>
+</defs>
+<rect width="400" height="200" rx="16" fill="url(#k9bg)"/>
+<line x1="200" y1="30" x2="200" y2="172" stroke="#f9a8d4" stroke-width="2" stroke-dasharray="6 6"/>
+
+<!-- 左：死记硬背 -->
+<path d="M88 32 l24 24 M112 32 l-24 24" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>
+<circle cx="100" cy="95" r="42" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+<rect x="78" y="78" width="44" height="34" rx="5" fill="#ffffff" stroke="#d1d5db"/>
+<g stroke="#9ca3af" stroke-width="2.5" stroke-linecap="round">
+<line x1="85" y1="88" x2="115" y2="88"/><line x1="85" y1="97" x2="115" y2="97"/><line x1="85" y1="106" x2="106" y2="106"/>
+</g>
+<text x="100" y="168" font-size="17" font-weight="700" fill="#dc2626" text-anchor="middle" font-family="system-ui">死记硬背</text>
+
+<!-- 右：举一反三 -->
+<path d="M286 44 l9 9 l18 -20" stroke="#10b981" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="300" cy="95" r="42" fill="#dbeafe" stroke="#60a5fa" stroke-width="2"/>
+<circle cx="300" cy="90" r="15" fill="#fbbf24"/>
+<rect x="294" y="103" width="12" height="6" rx="2" fill="#d97706"/>
+<g stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round">
+<line x1="300" y1="66" x2="300" y2="71"/><line x1="278" y1="90" x2="283" y2="90"/><line x1="317" y1="90" x2="322" y2="90"/>
+</g>
+<text x="300" y="168" font-size="17" font-weight="700" fill="#059669" text-anchor="middle" font-family="system-ui">举一反三</text>
+</svg>
+<p class="illu-caption">左边把练习册背下来，换个问法就错；右边学到规律，没见过的题也能答对。</p>
+</div>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前面几坎，机器一直围着一句话、几道题转。现在要把一整本童话喂进去，数据一下子多了。</p>
+<p>可数据多了有个新讲究：不能全拿来练，得留一手。</p>
+<p>这一坎，咱们看为什么要留，以及不留会出什么洋相。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>怎么把数据分成训练、验证、测试三堆，弄明白什么是过拟合，以及怎么发现它。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 11 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 数据分三堆，留两手</h2>
+<p>你有一大堆题，全拿来练，就没法知道它是真学会了，还是把题背下来了。</p>
+<p>就像平时练的和考试的不能是同一套，否则看不出真本事。</p>
+<p>所以数据一上来，先分三堆：最大堆放进去更新参数，叫 <strong>训练集</strong>；再留一堆小的，练的时候拿它看进度、决定要不要停手，叫 <strong>验证集</strong>；最小的一堆全程锁起来，练完了才考一次，叫 <strong>测试集</strong>（留出集）。</p>
+<p>为啥分这么细？你老盯着验证集调，调着调着也会朝它背答案。所以得再留一堆从头到尾没碰过的，最后这一考，才是真本事。</p>
+<p>还有个规矩：按整篇、整段来切，别把同一篇童话里相邻的两句话，一句丢训练、一句丢测试，那等于考试前漏了题。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 过拟合：它把题背下来了</h2>
+<p>机器记性好得很。你让它反复练同样的题，它干脆不琢磨道理，直接把答案背下来。</p>
+<p>这时候训练集上的表现那叫一个漂亮，看着像满分。可一拿没见过的题考它，立马抓瞎。</p>
+<p>这就是 <strong>过拟合</strong>：它学的不是规律，是这几道题的答案。</p>
+<p>就像一个学生，把练习册背得滚瓜烂熟，考试稍微换个问法，就不会了。</p>
+<p>这跟前面防偷看是一个心思：都得防着它作弊，一个抄后面，一个背答案。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 怎么发现过拟合</h2>
+<p>靠的是那堆验证集。练的时候，同时盯着两个损失：训练集上的，和验证集上的。</p>
+<p>正常情况，两个都往下走，说明它真学到了能用上的规律。</p>
+<p>要是训练集的损失还在一个劲儿降，验证集的损失却不降了，甚至开始往上走，这就是过拟合的信号——它开始背题了。这时候就停手。等全部定了，再拿锁着的测试集，考最后一次。</p>
+<p>下面这个演示，你点“继续训练”，看两条曲线怎么分叉。</p>
+
+<div class="demo-card" id="overfitDemo"></div>
+<div id="soft-3"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：训练、验证、测试三集的划分，还有过拟合这个“死记硬背”的毛病。</p>
+<p>下一坎接着看：题这么多，一道一道练太慢，怎么一次多看几道？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-08.html">← 第 8 坎：层归一化</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-10.html">第 10 坎：批量 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-09.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '09';
+    var totalStations = 3;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    OverfitDemo.render(document.getElementById('overfitDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

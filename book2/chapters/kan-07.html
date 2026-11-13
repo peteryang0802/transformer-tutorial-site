@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 7 坎：残差连接——给深层留条快车道</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 7 坎　残差连接：给深层留条快车道</h1>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一坎，最小闭环合上了，机器能学会一道题。</p>
+<p>可咱们那台机器，层数还很浅。想让本事更大，直觉上就是多堆几层。</p>
+<p>这一坎，咱们看往深里堆会撞上什么麻烦，又怎么用一个特别朴素的办法绕过去。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>为什么层数多了反而难训，残差连接怎么用一条“抄近道”的快车道把它解决。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 11 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 想把机器做厚，麻烦来了</h2>
+<p>先说直觉。一层能干的事有限，多叠几层，本事应该更大。</p>
+<p>可真叠起来，会撞上一个怪现象：层数加多了，机器反而更难训，损失降得更慢，甚至不动了。</p>
+<p>毛病出在信息是一层一层传的。每经过一层都做一堆变换，层数一多，信号传着传着就变样、变弱，到后头快没了。</p>
+<p>反向传梯度也一样，责任走着走着弱下去，前面的层收不到明确信号。</p>
+<p>这就像一长串人传话，传到最后，话早不是原来的意思了。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 一个朴素的主意：抄近道</h2>
+<p>你不是怕信号传着传着没了吗？那干脆，给它留一条直道。</p>
+<p>每一层，除了正常算一份，再把这一层的输入，原封不动加到输出上：</p>
+<div class="formula">输出 = 正常变换的结果 + 原来的输入</div>
+<p>这条把输入直接送过去的道，叫 <strong>残差连接</strong>（也叫跳过连接），它跳过了中间那一层。</p>
+<p>你把它想成楼里的直达电梯。楼梯还在，可你也能坐电梯，一步到。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 这条道为什么这么管用</h2>
+<p>最管用的一条：它让“多一层，有机会不更差”。</p>
+<p>那条直道把原来的信号完整保留着。这一层有用，就加点东西；没用，它有机会靠近“啥也没干”，让信号原样通过，不轻易把事情搞坏。</p>
+<p>梯度往回传时，也多了一条不衰减的直路，再深的层也更有机会收到清楚的责任。</p>
+<p>开头那个怪现象就缓解了：层数可以更有底气往深里堆。不过我得说清楚，残差是帮大忙，不是打包票——它不保证损失一定更低，真训起来还得配上后面的归一化这些手段。</p>
+<p>下面这个演示，你切换标签、点“加一层”，看有没有这条直道，信号能传多远。</p>
+
+<div class="demo-card" id="residualDemo"></div>
+<div id="soft-3"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：深层训练的麻烦，还有残差连接这条“原封不动加回去”的快车道。</p>
+<p>下一坎接着看：信号能传过去了，可每层出来的数尺度乱，怎么把它们理整齐？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-06.html">← 第 6 坎：更新</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-08.html">第 8 坎：层归一化 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-07.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '07';
+    var totalStations = 3;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    ResidualDemo.render(document.getElementById('residualDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

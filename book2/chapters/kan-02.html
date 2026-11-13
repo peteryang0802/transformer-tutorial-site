@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 2 坎：出题——让机器自己给自己出题</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 2 坎　出题：让机器自己给自己出题</h1>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一坎，咱们把童话切成了小单元，还编好了号。</p>
+<p>可这些小单元安安静静躺在那儿，机器不知道该拿它们干嘛。</p>
+<p>学东西得做题呀。可谁来出这些题？请人一道一道标，一本童话几十万字，那得标到猴年马月。</p>
+<p>这一坎，咱们看机器怎么自己给自己出题。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>不用人工标注，把一句话变成一串“看前面、猜下一个”的题；还得给每句话标好开头和结尾。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 11 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 把句子错开，题目答案都有了</h2>
+<p>先想一个最朴素的道理。</p>
+<p>你读“小女孩 擦亮 火柴”。读到“小女孩”，你心里会猜下一个词大概是个动作；读到“小女孩 擦亮”，你大概能猜到，下一个词跟擦亮的东西有关。</p>
+<p>看出门道没？题目和答案，这句话里本来就有。</p>
+<p>拿前面的词当题目，紧挨着的下一个词当答案。把句子错开一位，题就出来了：</p>
+<ul class="bullet-list">
+<li>题目：小女孩　　答案：擦亮</li>
+<li>题目：小女孩 擦亮　　答案：火柴</li>
+</ul>
+<p>没请任何老师，全是句子自己提供的。这叫 <strong>自监督</strong>——自己监督自己。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 开头和结尾，得有个记号</h2>
+<p>再想两个小问题。</p>
+<p>机器从哪儿开始读？第一个词前面啥都没有，它怎么知道这是一句话的开头？还有，它怎么知道一句话说完了？老没完没了地接下去，也不是个事儿。</p>
+<p>规矩得立两个记号。</p>
+<p>开头放一个 <strong>BOS</strong>，意思是“开始”。它不算正文，就像发令枪。</p>
+<p>结尾放一个 <strong>EOS</strong>，意思是“结束”。机器学会预测它，就等于学会了“这儿该收尾了”。</p>
+<p>有了这两个记号，每句话都有头有尾，机器心里就有数了。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 一句话，变出一整套题</h2>
+<p>现在把这两样合起来看。</p>
+<p>一句话，加上 BOS 开头、EOS 结尾，然后窗口一格一格往后挪。每挪一格，就出一道题：看前面，猜下一个。</p>
+<p>一个不长的句子，能变出好几道、十几道题。一整本童话，题量就海了去。</p>
+<p>而且这些题一个都不用人标，全是自动出的。这就是为什么机器光靠读，就能练——它有的是题做。</p>
+<p>下面这个出题器，你点“出下一道”，看窗口怎么挪，题目和答案怎么跟着变。</p>
+
+<div class="demo-card" id="quizDemo"></div>
+<div id="soft-3"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：自监督、错开出题，还有 BOS、EOS 这两个头尾记号。</p>
+<p>下一坎接着看：题是出好了，可机器到底怎么给这些候选打分，还不许它偷看后面的答案？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-01.html">← 第 1 坎：切书</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-03.html">第 3 坎：打分与防偷看 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-02.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '02';
+    var totalStations = 3;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    QuizDemo.render(document.getElementById('quizDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 11 坎：泛化与困惑度——没见过的题会不会</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 11 坎　泛化与困惑度：没见过的题会不会</h1>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一坎，咱们学会了批量训练，还认识了 Adam。</p>
+<p>现在关心一个最实在的问题：这台机器，碰到没见过的话，到底行不行？</p>
+<p>这一坎，咱们讲两个词：泛化，和一个特别好懂的指标——困惑度。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>什么是泛化，困惑度怎么用一个“犹豫几个选项”的数，把模型水平说清楚。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 11 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 泛化：把规律用到没见过的地方</h2>
+<p>机器练的是训练集里的题，可真正用的时候，碰到的都是没见过的新句子。</p>
+<p>它能不能把学到的规律，用到这些新地方，这个本事，就叫 <strong>泛化</strong>。</p>
+<p>泛化好，没见过的题也接得有模有样；泛化差，一换地方就懵。</p>
+<p>咱们前面防偷看、留测试集、防过拟合，忙活这么多，为的就是让它泛化得好一点。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 困惑度：它在几个选项里犹豫</h2>
+<p>损失能衡量好坏，可不太直观。再认识一个更好懂的指标，叫 <strong>困惑度</strong>。</p>
+<p>你这么理解：它相当于，机器每接一个词，平均在几个候选之间犹豫。</p>
+<p>困惑度是 1，它心里就一个答案，一点不犹豫；困惑度是 5，打个比方，就像在 5 个选项里拿不准。</p>
+<p>我得说一句，“几个选项”是帮你找感觉的比喻，不是真摆着那么多个选项。严格的困惑度，是按后面那个公式算出来的。</p>
+<p>这个数越大，说明它越迷糊，越没谱。数小，才是好事。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 困惑度和损失，其实是一回事</h2>
+<p>困惑度不是什么新东西，它就是从损失变来的：</p>
+<div class="formula">困惑度 = e 的 平均损失 次方</div>
+<p>损失越小，困惑度越小，俩说的是同一件事，只是困惑度直接告诉你“相当于几个选项”。</p>
+<p>在测试集上算个困惑度，就知道这台机器整体什么水平。不过拿它跟别的模型比，得有前提：同一批测试数据、同一套切词方法、同样的评估口径，这时候谁的数小，才更有底气说谁更靠谱。</p>
+<p>还得记住：困惑度小，只说明它接词接得顺，不代表它说的是事实、答得对。</p>
+<p>下面这个演示，你点不同场景，看它犹豫的选项数和困惑度怎么对上。</p>
+
+<div class="demo-card" id="perplexityDemo"></div>
+<div id="soft-3"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：泛化这个本事，还有困惑度这个“相当于几个选项”的好懂指标。</p>
+<p>下一坎接着看：咱们这台小机器，工业界是怎么把它一步步变大的？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-10.html">← 第 10 坎：批量</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-12.html">第 12 坎：规模与工程 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-11.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '11';
+    var totalStations = 3;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    PerplexityDemo.render(document.getElementById('perplexityDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

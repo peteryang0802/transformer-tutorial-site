@@ -1,26 +1,87 @@
 <!DOCTYPE html>
-
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>从一句话出发逐步构造 Transformer</title><link href="favicon.ico" rel="icon" type="image/x-icon"/>
-<link href="css/style.css?v=20261113aa" rel="stylesheet"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>从一句话到小 LLM：两册交互式教程</title>
+<link href="favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="css/style.css?v=20261114r1" rel="stylesheet"/>
 </head>
 <body>
-<h1>从一句话出发逐步构造 Transformer</h1>
-<p>这是一份从零开始的交互式教程。正文以阅读为主，遇到光靠文字讲不清的地方，会出现可以动手调一调、先猜后验的演示。进度存在你自己的浏览器里，不用注册。</p>
+<h1>从一句话到小 LLM</h1>
+<p>一套两册的交互式教程：先把 Transformer 的道理摸透，再亲手搭一个能保存、能用的小 LLM。进度存在你自己的浏览器里，不用注册。</p>
+
 <div id="continueWrap" style="margin:16px 0;"></div>
-<h2>目录</h2>
+
+<!-- 主视觉：一句话 → 魔法锅 -->
+<div class="illu">
+<svg viewBox="0 0 400 230" role="img" aria-label="从一句话到魔法锅：先懂原理，再动手造" xmlns="http://www.w3.org/2000/svg">
+<title>从一句话到小 LLM</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#eef2ff"/><stop offset="1" stop-color="#e0f2fe"/>
+</linearGradient>
+<linearGradient id="pot" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#4338ca"/>
+</linearGradient>
+<linearGradient id="flame" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#fde047"/><stop offset="1" stop-color="#f97316"/>
+</linearGradient>
+</defs>
+<rect width="400" height="230" rx="16" fill="url(#bg)"/>
+
+<rect x="30" y="78" width="92" height="74" rx="12" fill="#ffffff" stroke="#bfdbfe" stroke-width="2"/>
+<text x="76" y="128" font-size="40" font-weight="700" fill="#2563eb" text-anchor="middle" font-family="system-ui">?</text>
+
+<path d="M132 115 h96" stroke="#94a3b8" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="M220 104 l14 11 -14 11" stroke="#94a3b8" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+<path d="M250 134 q-15 2 -13 17" stroke="#4338ca" stroke-width="6" fill="none" stroke-linecap="round"/>
+<path d="M352 134 q15 2 13 17" stroke="#4338ca" stroke-width="6" fill="none" stroke-linecap="round"/>
+<path d="M252 128 v28 a58 58 0 0 0 116 0 v-28 z" fill="url(#pot)"/>
+<ellipse cx="310" cy="128" rx="58" ry="13" fill="#312e81"/>
+<path d="M290 156 q34 15 68 0" stroke="#818cf8" stroke-width="3" fill="none" opacity="0.5"/>
+<path d="M286 208 q-8 -8 0 -16 q8 9 0 16 z" fill="#fbbf24"/>
+<path d="M330 208 q-8 -8 0 -16 q8 9 0 16 z" fill="#fbbf24"/>
+<path d="M308 210 q-11 -11 0 -24 q11 13 0 24 z" fill="url(#flame)"/>
+<path d="M262 60 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#fbbf24"/>
+<g stroke="#0891b2" stroke-width="4" stroke-linecap="round">
+<line x1="345" y1="70" x2="365" y2="70"/>
+<line x1="350" y1="62" x2="360" y2="78"/>
+<line x1="360" y1="62" x2="350" y2="78"/>
+</g>
+</svg>
+<p class="illu-caption">先把问号里的道理推明白，再把它丢进魔法锅，炼出能用的小模型。</p>
+</div>
+
+<!-- 两册门廊 -->
+<div class="book-porch">
+  <div class="book-card b1">
+    <span class="book-step">第一步 · 打地基</span>
+    <h3>从一句话构建 Transformer</h3>
+    <p class="book-desc">从一句话出发，把 Transformer 的核心算法一篇篇推导出来，每篇都有能动手的小演示。</p>
+    <p class="book-meta">19 个单元 · 建议先读</p>
+    <a class="book-btn" href="chapters/preface.html">进入第一册</a>
+  </div>
+  <div class="book-card b2">
+    <span class="book-step">第二步 · 上手造</span>
+    <h3>亲手搭一个能用的小 LLM</h3>
+    <p class="book-desc">读安徒生童话，真训练、真采样、真导出，15 坎搭出自己的小模型并保存下来。</p>
+    <p class="book-meta">15 道坎 · 进阶</p>
+    <a class="book-btn" href="book2/index.html">进入第二册</a>
+  </div>
+</div>
+
+<h2>第一册目录</h2>
 <ul class="chapter-list">
 <li><a href="chapters/preface.html">写在前面：我想从一句话开始，把 Transformer 重新搭一遍</a></li>
 </ul>
 <ul class="chapter-list" id="chapterList"></ul>
-<p class="tip-text">19 个单元都能通读，每篇都有可以动手的小演示，第 17 篇的演示最完整。</p>
-<script src="js/iframeResizer.contentWindow.min.js?v=20261113aa"></script>
-<script src="js/progress.js?v=20261113aa"></script>
+<p class="tip-text">19 个单元都能通读，每篇都有可以动手的小演示，第 17 篇的演示最完整。第二册的 15 坎目录，点进第二册再看。</p>
+
+<script src="js/iframeResizer.contentWindow.min.js?v=20261114r1"></script>
+<script src="js/progress.js?v=20261114r1"></script>
 <script>
-        // 章节元数据：id 两位编号，file 指向章节页，stations 是这一章分几站
         const CHAPTERS = [
             { id: 1,  title: '把长句拆成一个一个的小单元', file: 'chapters/chapter-01.html', stations: 4 },
             { id: 2,  title: '给每个 Token 配一组能计算的数', file: 'chapters/chapter-02.html', stations: 3 },

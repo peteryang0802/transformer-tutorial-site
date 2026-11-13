@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 13 坎：解码与童话搅拌机——让它把话接出来</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 13 坎　解码与童话搅拌机：让它把话接出来</h1>
+
+<div class="illu">
+<svg viewBox="0 0 400 200" role="img" aria-label="从开头出发，接一个词、整句喂回去，再接下一个词" xmlns="http://www.w3.org/2000/svg">
+<title>解码：一个词一个词往外接</title>
+<defs>
+<linearGradient id="k13bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#ecfdf5"/><stop offset="1" stop-color="#ccfbf1"/>
+</linearGradient>
+</defs>
+<rect width="400" height="200" rx="16" fill="url(#k13bg)"/>
+
+<!-- 循环喂回箭头 -->
+<path d="M326 70 a160 46 0 0 0 -252 0" stroke="#14b8a6" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+<path d="M74 62 l-10 8 12 6" stroke="#14b8a6" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="200" y="40" font-size="14" font-weight="700" fill="#0d9488" text-anchor="middle" font-family="system-ui">接一个，整句喂回去，再接下一个</text>
+
+<!-- 词卡片 -->
+<g font-family="system-ui" font-size="15" font-weight="700" text-anchor="middle">
+<rect x="22" y="88" width="70" height="50" rx="10" fill="#ede9fe" stroke="#c4b5fd" stroke-width="2"/>
+<text x="57" y="120" fill="#6d28d9">BOS</text>
+<rect x="112" y="88" width="70" height="50" rx="10" fill="#ffffff" stroke="#a7f3d0" stroke-width="2"/>
+<text x="147" y="120" fill="#047857">水晶鞋</text>
+<rect x="202" y="88" width="70" height="50" rx="10" fill="#ffffff" stroke="#a7f3d0" stroke-width="2"/>
+<text x="237" y="120" fill="#047857">火柴</text>
+<rect x="292" y="88" width="70" height="50" rx="10" fill="#ffffff" stroke="#a7f3d0" stroke-width="2"/>
+<text x="327" y="120" fill="#047857">光</text>
+</g>
+<!-- 卡片间箭头 -->
+<g fill="#5eead4">
+<path d="M96 113 l10 0 -3 -6 8 8 -8 8 3 -6 -10 0 z"/>
+<path d="M186 113 l10 0 -3 -6 8 8 -8 8 3 -6 -10 0 z"/>
+<path d="M276 113 l10 0 -3 -6 8 8 -8 8 3 -6 -10 0 z"/>
+</g>
+
+<!-- 概率提示 -->
+<text x="200" y="168" font-size="13.5" fill="#0f766e" text-anchor="middle" font-family="system-ui">每个下一个词，都从当前概率里真抽（温度、top-k 都在这一步起作用）</text>
+</svg>
+<p class="illu-caption">解码不是一次出整句，是接一个词、喂回去、再接下一个，循环到结尾。</p>
+</div>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前面又是训练又是防过拟合，机器学会了给下一个词打分。</p>
+<p>可怎么让它真的开口，一句一句把话接出来？</p>
+<p>这一坎，咱们讲怎么往外蹦词，最后把“童话搅拌机”架起来。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>机器怎么一个词一个词往外接，温度怎么调大胆程度，最后用搅拌机把两个童话揉一起。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 15 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 先想明白：它到底懂不懂（不编号站，不增加站数） -->
+<div class="demo-card">
+<p class="demo-title">先想明白：它到底懂不懂？</p>
+<p>前面老说，它的本事是“接下一个词”，不是人那种懂。这话没错，可只说了一半。</p>
+<p>它没把语料原样背下来——几千个参数，装不下那么多句子。训练逼着它干的，是把语料里的规律，压缩进这几千个参数。</p>
+<p>这里有个讲究。同样是算概率，有两种本事：一种是背词频表，记住谁后面老跟着谁，背完只会照抄；一种是找规律，用一小套参数把句子重新生成出来。它被训练逼着做的，是后者——找一条能生成这些话的短程序，不是背一张大表。</p>
+<p>所以它懂不懂？它确实把读过的东西压进了参数，能照规律接话、能答见过的事，这是真本事；可它没有人那种明白意思，压缩还是有损的，碰到没压好的地方，就一本正经瞎编。</p>
+<p class="tip-text">本事和毛病是同一个根子：压缩。压准了靠谱，压丢了幻觉。</p>
+</div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 一个词一个词往外蹦</h2>
+<p>机器每次只算一件事：给所有候选词，就下一个位置打分。</p>
+<p>怎么变成一整句话？靠来回转：起个头，挑一个词接上去，再把整句喂回去算下一个，接一个、喂回去、再接一个。</p>
+<p>这个往外蹦词的过程，叫 <strong>解码</strong>。</p>
+<p>最简单的挑法叫 <strong>贪心</strong>：每次都选分数最高的，最稳，可也容易死板。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 温度旋钮：调大胆程度</h2>
+<p>打分过 softmax 时，温度加在这一步上。</p>
+<p>温度低，概率往最可能的词上集中，它就保守；温度调高，概率被拉平，不那么可能的词也有机会，它就大胆，敢蹦新鲜词。</p>
+<p>说准确点，温度改的是概率分布的尖锐程度，不是凭空给它“创造力”。新鲜词能不能接得好，根子还在训练出来的那些分数上。</p>
+<p>温度太高也不行，它就开始胡言乱语。</p>
+<p>这个旋钮，调的就是“大胆程度”，跟搅拌机上的火候是一个东西。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 别让它在离谱的词上浪费</h2>
+<p><strong>top-k</strong>：只在分数最高的 k 个词里挑，剩下的直接不许。</p>
+<p><strong>top-p</strong>（核采样）：把概率从高到低加，凑够一个比例就打住，只在这堆里挑。</p>
+<p>这么做，是降低它抽中那些低概率、离谱词的机会，留点变化余地。可它不保证出来的句子一定连贯、一定对，只是把最离谱的先挡在门外。</p>
+<p>还有 <strong>KV 缓存</strong>：把前面算过的存起来复用，省得每接一个词都从头算，越往后越慢。</p>
+<div id="soft-3"></div>
+</section>
+
+<!-- 第 4 站 -->
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 童话搅拌机：亲手搅拌一段</h2>
+<p>架子上摆着各童话的元素。你挑两个丢进锅里，拧一下温度，点“开始搅拌”，它就一个词一个词往外接，把这俩元素揉成一小段。</p>
+<p>丑话说前头：小模型揉出来的是“看着像、元素都在”的片段，不是一篇通顺的完整童话，这是个头决定的。可这一小段，是你亲手从数据一路搭出来的。</p>
+
+<div class="observe-task">
+<p class="observe-label">动手时，带着这两个问题看</p>
+<ul class="bullet-list">
+<li>先把温度拧到 0.5 搅一次，再拧到 1.5 多搅几次，看看后面是不是更“花”、更容易出不一样的结果。</li>
+<li>不管咋搅，开头你挑的那两个元素，是不是每次都稳稳地在？</li>
+</ul>
+</div>
+
+<div class="demo-card" id="mixerDemo"></div>
+<div id="soft-4"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：解码、温度、top-k/top-p，还有亲手搅出一段的童话搅拌机。</p>
+<p>下一坎接着看：光会接话还不够，怎么让它更听话、更靠谱？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-12.html">← 第 12 坎：规模与工程</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-14.html">第 14 坎：后训练 →</a>
+</nav>
+
+<script src="../js/autograd.js?v=20261114r1"></script>
+<script src="../js/transformer.js?v=20261114r1"></script>
+<script src="../js/kan-13-data.js?v=20261114r1"></script>
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-13.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '13';
+    var totalStations = 4;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    MixerDemo.render(document.getElementById('mixerDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

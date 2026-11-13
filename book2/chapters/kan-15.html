@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 15 坎：保存、评估、交付——让它在别人手里也能用</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 15 坎　保存、评估、交付：让它在别人手里也能用</h1>
+
+<div class="illu">
+<svg viewBox="0 0 400 200" role="img" aria-label="模型的参数、配置、词表存成三个文件，能下载带走" xmlns="http://www.w3.org/2000/svg">
+<title>把模型存成文件</title>
+<defs>
+<linearGradient id="k15bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#f5f3ff"/><stop offset="1" stop-color="#fae8ff"/>
+</linearGradient>
+</defs>
+<rect width="400" height="200" rx="16" fill="url(#k15bg)"/>
+
+<!-- 机器 -->
+<rect x="26" y="72" width="78" height="66" rx="12" fill="#6366f1"/>
+<g fill="#c7d2fe">
+<circle cx="48" cy="96" r="6"/><circle cx="65" cy="96" r="6"/><circle cx="82" cy="96" r="6"/>
+<circle cx="48" cy="118" r="6"/><circle cx="65" cy="118" r="6"/><circle cx="82" cy="118" r="6"/>
+</g>
+<g stroke="#a5b4fc" stroke-width="2">
+<line x1="48" y1="102" x2="48" y2="112"/><line x1="65" y1="102" x2="65" y2="112"/><line x1="82" y1="102" x2="82" y2="112"/>
+</g>
+
+<!-- 箭头 -->
+<path d="M110 105 h20" stroke="#a78bfa" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M130 98 l9 7 -9 7" stroke="#a78bfa" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+<!-- 三个文件 -->
+<!-- weights -->
+<path d="M140 72 l38 0 12 12 0 52 -50 0 z" fill="#ede9fe" stroke="#a78bfa" stroke-width="2"/>
+<path d="M178 72 l0 12 12 0" fill="#ddd6fe" stroke="#a78bfa" stroke-width="2"/>
+<g stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" opacity="0.7">
+<line x1="148" y1="104" x2="182" y2="104"/><line x1="148" y1="114" x2="182" y2="114"/><line x1="148" y1="124" x2="170" y2="124"/>
+</g>
+<!-- config -->
+<path d="M202 72 l38 0 12 12 0 52 -50 0 z" fill="#dbeafe" stroke="#60a5fa" stroke-width="2"/>
+<path d="M240 72 l0 12 12 0" fill="#bfdbfe" stroke="#60a5fa" stroke-width="2"/>
+<g stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" opacity="0.7">
+<line x1="210" y1="104" x2="244" y2="104"/><line x1="210" y1="114" x2="244" y2="114"/><line x1="210" y1="124" x2="232" y2="124"/>
+</g>
+<!-- tokens -->
+<path d="M264 72 l38 0 12 12 0 52 -50 0 z" fill="#dcfce7" stroke="#4ade80" stroke-width="2"/>
+<path d="M302 72 l0 12 12 0" fill="#bbf7d0" stroke="#4ade80" stroke-width="2"/>
+<g stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" opacity="0.7">
+<line x1="272" y1="104" x2="306" y2="104"/><line x1="272" y1="114" x2="306" y2="114"/><line x1="272" y1="124" x2="294" y2="124"/>
+</g>
+
+<!-- 文件名 -->
+<g font-family="system-ui" font-size="11" font-weight="700" text-anchor="middle">
+<text x="165" y="156" fill="#6d28d9">weights</text>
+<text x="227" y="156" fill="#1d4ed8">config</text>
+<text x="289" y="156" fill="#15803d">tokens</text>
+</g>
+<text x="200" y="180" font-size="13" fill="#7e22ce" text-anchor="middle" font-family="system-ui">参数、配置、词表都存成文件，能下载、能带走</text>
+</svg>
+<p class="illu-caption">练完不是一场空，把模型存成几个真文件，别人拿到手就能照着用。</p>
+</div>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一坎，模型调教得更听话、更靠谱了。</p>
+<p>现在到最后一步：怎么把它存下来、评估明白，交到别人手里，人家也能照着用？</p>
+<p>这一坎，咱们把这最后一件事办利索。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>模型要存哪几样东西、怎么评估它的真实水平，以及怎么打包好交付出去。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 12 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 存下来的，不止是一堆数</h2>
+<p>光有一堆参数，别人不知道每个数是啥、怎么摆，模型照样没法用。得存三样：</p>
+<ul class="bullet-list">
+<li><strong>权重</strong>：所有参数的数值，模型的本体。</li>
+<li><strong>配置</strong>：几层、维度多少、词表多大、什么结构，照着它才能把权重摆回原位。</li>
+<li><strong>词表和切分规矩</strong>：当初怎么把文字切块、编号怎么对应，否则新文字没法变成模型认识的编号。</li>
+</ul>
+<p>三样齐了，别人才能在他的机器上，把模型原封不动重新搭起来。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 交付之前，先把水平评估明白</h2>
+<ul class="bullet-list">
+<li><strong>梯度核对</strong>：拿最笨、最不会错的办法（一点点挪、数变化），跟反向传播的结果对一对，对上才放心。</li>
+<li><strong>留出困惑度</strong>：在没见过的测试集上算个困惑度，一个数说清整体水平。</li>
+<li><strong>公共基准</strong>：在业界公认的题集上，跟别的模型同一套题比。分数能参考，但也有讲究：题集覆盖面够不够、有没有被提前拿去训练过（数据污染）、提问方式一不一样，都会影响这个数，不能光看一个总分就下结论。</li>
+</ul>
+<p>一个查内部算得对不对，一个查实际表现，一个查跟同行比处在什么位置。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 让它更省、更好用，再打包</h2>
+<p><strong>量化</strong>：很多参数用不着那么精细，把它换成更省的表示（比如 32 位压到 8 位），个头小一大截，跑得更快，精度还掉得不多。</p>
+<p>这跟混合精度是一个心思，都是在“够用”和“省”之间找平衡。</p>
+<p>再把几样文件清清楚楚归到一个文件夹，附上说明，就是一次完整的交付。</p>
+
+<div class="demo-card" id="saveDemo"></div>
+<div id="soft-3"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：权重、配置、词表三样的保存，评估的几个法子，还有量化和打包交付。</p>
+<p>回头看，从一句话、一堆随机数，到亲手把这台小 LLM 存好、评估明白、交到别人手里——这条路，你走完了。</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-14.html">← 第 14 坎：后训练</a>
+<a href="../index.html">返回目录</a>
+</nav>
+
+<script src="../js/autograd.js?v=20261114r1"></script>
+<script src="../js/transformer.js?v=20261114r1"></script>
+<script src="../js/kan-13-data.js?v=20261114r1"></script>
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-15.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '15';
+    var totalStations = 3;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    SaveDemo.render(document.getElementById('saveDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

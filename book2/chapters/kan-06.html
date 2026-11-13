@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 6 坎：更新——照着梯度把参数改一改</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 6 坎　更新：照着梯度把参数改一改</h1>
+
+<div class="illu">
+<svg viewBox="0 0 400 200" role="img" aria-label="一道题从左边进机器，参数更新，损失下降，右边输出正确答案" xmlns="http://www.w3.org/2000/svg">
+<title>机器学一道题</title>
+<defs>
+<linearGradient id="k6bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#fff7ed"/><stop offset="1" stop-color="#ffedd5"/>
+</linearGradient>
+<linearGradient id="k6machine" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#2563eb"/>
+</linearGradient>
+</defs>
+<rect width="400" height="200" rx="16" fill="url(#k6bg)"/>
+
+<!-- 题目卡 -->
+<rect x="34" y="70" width="78" height="62" rx="10" fill="#ffffff" stroke="#fed7aa" stroke-width="2"/>
+<text x="73" y="113" font-size="34" font-weight="700" fill="#fb923c" text-anchor="middle" font-family="system-ui">?</text>
+
+<!-- 箭头 -->
+<path d="M118 101 h28" stroke="#94a3b8" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M146 94 l9 7 -9 7" stroke="#94a3b8" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+<!-- 机器盒子 -->
+<rect x="155" y="50" width="96" height="100" rx="14" fill="url(#k6machine)"/>
+<!-- 参数节点 -->
+<g fill="#bfdbfe">
+<circle cx="176" cy="78" r="6"/><circle cx="203" cy="78" r="6"/><circle cx="230" cy="78" r="6"/>
+<circle cx="176" cy="108" r="6"/><circle cx="203" cy="108" r="6"/><circle cx="230" cy="108" r="6"/>
+</g>
+<g stroke="#93c5fd" stroke-width="2" opacity="0.8">
+<line x1="176" y1="84" x2="176" y2="102"/><line x1="203" y1="84" x2="203" y2="102"/><line x1="230" y1="84" x2="230" y2="102"/>
+</g>
+<!-- 损失下降折线 -->
+<polyline points="166,138 183,128 200,131 217,116 238,109" stroke="#fca5a5" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+<!-- 箭头 -->
+<path d="M258 101 h22" stroke="#94a3b8" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M280 94 l9 7 -9 7" stroke="#94a3b8" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+<!-- 输出卡 -->
+<rect x="290" y="70" width="78" height="62" rx="10" fill="#ffffff" stroke="#bbf7d0" stroke-width="2"/>
+<path d="M316 102 l8 8 l16 -18" stroke="#10b981" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+<p class="illu-caption">一道题进机器，参数照着梯度更新，损失一路往下，答案慢慢对上。</p>
+</div>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前面几坎，咱们把一件事拆成了四步：预测、算损失、反向传梯度、每个参数领到责任。</p>
+<p>零件全齐了，可参数还停在原地，一次都没真改过。</p>
+<p>这一坎咱们动手改。改完，你会亲眼看着它从瞎猜，一点点变得靠谱。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>参数怎么照着梯度更新、学习率管什么用，然后在完整训练台上看损失一路降下来。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 13 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 万事俱备，就差动手</h2>
+<p>先把手里的东西点一遍。</p>
+<p>预测，有了。损失，有了。反向传播把每个参数的梯度也算出来了。</p>
+<p>梯度告诉每个参数：往哪个方向改、责任有多大。</p>
+<p>可“知道怎么改”和“真的改”，还差最后一步。这一步，就叫 <strong>更新</strong>。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 更新就一行：照着反方向挪一小步</h2>
+<p>规矩简单到就一行：</p>
+<div class="formula">新参数 = 旧参数 − 学习率 × 梯度</div>
+<p>梯度指的是“往哪儿走损失会变大”，所以要降损失，就用减号，往反方向走。那个“学习率”，是个比例，管着每一步改多少。</p>
+<p>你记着这个动作就行：每个参数，照着自己梯度的反方向，挪一小步。</p>
+<p>所有参数同时改一遍，这叫一次更新。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 学习率：步子不能乱迈</h2>
+<p>这个“学习率”，定的是每一步迈多大。</p>
+<p>步子太小，挪得跟蜗牛似的，学半天没动静。</p>
+<p>步子太大呢？一下子迈过头，在最低点两边来回蹦，甚至越走越远，直接扯着。</p>
+<p>所以得取个合适的中间值，既能稳步往前走，又不冲过头。下面训练台上有滑块，你可以调一调，亲身体会。</p>
+<div id="soft-3"></div>
+</section>
+
+<!-- 第 4 站 -->
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 完整训练台：看它一路学下来</h2>
+<p>把四步连起来，就是一次完整的训练循环：预测 → 算损失 → 反向传梯度 → 更新。然后回到预测，再来一遍。</p>
+<p>下面这个训练台，就是咱们这一阶段的总成果。</p>
+<p>你可以先单步走，一帧一帧看明白；看熟了点慢放；想直接看结果，点快跑 100 次。</p>
+<p>盯着损失，还有正确答案的概率——你会看到损失一路往下掉，正确答案的概率一点点涨上来。</p>
+<p>这，就是机器“学”的全过程。</p>
+<p class="tip-text">先打个预防针：下面这个训练台是个练手的替身，真家伙（完整 Transformer）在第 13 坎等你。</p>
+<div id="guess-4"></div>
+<div id="soft-4"></div>
+</section>
+
+<!-- ===== 完整训练台 ===== -->
+<div class="train-console">
+<div class="identity-tag tag-sim">
+<span class="identity-dot"></span>
+<span class="identity-label">模拟示意</span>
+<span class="identity-note">这是个简化的线性打分器，专门用来跑通“预测→损失→反向→更新”这个闭环，还不是完整的 Transformer；真实训练的过程，和这里是一个道理。</span>
+</div>
+<div class="phase-dots">
+<div class="phase-dot">1 预测</div>
+<div class="phase-dot">2 损失</div>
+<div class="phase-dot">3 反向</div>
+<div class="phase-dot">4 更新</div>
+</div>
+<div class="phase-hint" id="phaseHint"></div>
+
+<div class="lr-row">
+<label class="range-label" for="lrRange">学习率：<span id="lrVal">0.50</span></label>
+<input class="range-input" id="lrRange" max="2" min="0.05" step="0.05" type="range" value="0.5"/>
+</div>
+
+<div class="token-strip" id="tokenStrip"></div>
+
+<div class="panel">
+<div class="panel-title">各候选概率（绿底是正确答案）</div>
+<div id="probBars"></div>
+</div>
+
+<div class="panel">
+<div class="panel-title">当前损失</div>
+<div class="loss-num" id="lossNum">–</div>
+</div>
+
+<div class="panel">
+<div class="panel-title">计算图（责怪往回流）</div>
+<div class="calc-graph" id="calcGraph">
+<div class="g-node">x 输入</div>
+<div class="g-arrow">→</div>
+<div class="g-node">W 打分</div>
+<div class="g-arrow">→</div>
+<div class="g-node">softmax</div>
+<div class="g-arrow">→</div>
+<div class="g-node">概率</div>
+<div class="g-arrow">→</div>
+<div class="g-node">损失</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-title">权重 W 热力图（红↓调小，蓝↑调大）</div>
+<div class="heatmap" id="heatmap"></div>
+</div>
+
+<div class="btn-group">
+<button class="run-btn" id="stepBtn" type="button">单步走</button>
+<button class="run-btn" id="playBtn" type="button">慢放</button>
+<button class="run-btn" id="fastBtn" type="button">快跑100次</button>
+<button class="run-btn btn-secondary" id="resetBtn" type="button">重置</button>
+</div>
+
+<div class="panel">
+<div class="panel-title">损失曲线</div>
+<canvas class="loss-canvas" id="lossCanvas"></canvas>
+</div>
+
+<div class="code-card">
+<pre><code><span class="code-line">probs = softmax(x·W + b)      # 预测</span>
+<span class="code-line">loss = -log(probs[target])    # 损失</span>
+<span class="code-line">grad = 反向传播(...)          # 反向</span>
+<span class="code-line">W = W - lr * grad             # 更新</span></code></pre>
+</div>
+</div>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：更新公式、学习率，还有一整套能跑的训练循环。到这儿，最小闭环就合上了。</p>
+<p>下一阶段接着看：模型想往深里搭，怎么让它训得动、稳得住？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-05.html">← 第 5 坎：反向传播</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-07.html">第 7 坎：残差连接 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/model.js?v=20261114r1"></script>
+<script src="../js/app.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '06';
+    var totalStations = 4;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    makeGuess(document.getElementById('guess-4'), {
+        question: '照着梯度更新之后，你觉得正确答案的概率会咋变？',
+        options: ['一点点涨上来', '反而跌下去', '一动不动'],
+        correctIndex: 0,
+        explanation: '更新就是朝降损失的方向改参数，正确答案的概率会一点点涨。等下在训练台，你能亲眼看到。',
+        chapterId: chapterId,
+        stationIndex: 3
+    });
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

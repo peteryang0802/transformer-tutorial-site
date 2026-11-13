@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 5 坎：反向传播——把责任一层层推回去</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 5 坎　反向传播：把责任一层层推回去</h1>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一坎，咱们立了损失这个数，一眼看出猜得有多差。</p>
+<p>可光知道差还不够。机器里头成千上万个参数，到底是谁把事情搞砸的？每个该往哪个方向改？</p>
+<p>这一坎，咱们看损失怎么把责任，一层层精准地推回到每个参数头上。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>弄明白梯度是什么、责任怎么顺着计算链往回传，这就是反向传播。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 14 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 先想清楚，要找的是“责任”</h2>
+<p>机器算一道题，是一条链：参数 → 打分 → softmax → 概率 → 损失。</p>
+<p>最后损失很大，说明出错了。可这条链环节这么多，板子该打谁？</p>
+<p>咱们想知道的是：每个参数，对这个大损失，各负多少责任。这个参数稍微动一动，损失会变大还是变小？变化有多猛？</p>
+<p>这个“责任”，咱们给它起个名字，叫 <strong>梯度</strong>。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 梯度，就是“往哪儿使劲”的方向</h2>
+<p>你把梯度想成山坡上的指路牌。它告诉你：往哪个方向走，坡是往上的（损失变大）。</p>
+<p>那咱们要降损失，就反着来，往坡下走。</p>
+<p>梯度还带大小。梯度大，这地方陡，参数一动损失就变很多，责任重；梯度小，地方平缓，责任轻。</p>
+<p>每个参数配一个梯度，就等于每个人都知道：我该往哪个方向改、劲儿有多大。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 链式法则：责任一环扣一环</h2>
+<p>往前算的时候，参数决定打分，打分经 softmax 变概率，概率决定损失，一环扣一环。</p>
+<p>那往回推责任，也照这条路往回走。</p>
+<p>就像传话：损失先算出该怪概率多少，概率再算出该怪打分多少，打分最后算出该怪参数多少。</p>
+<p>每一环的责任，等于“上一环传过来的责任”乘上“这一环自己的变化关系”。</p>
+<p>这个一环扣一环往回传的规矩，叫 <strong>链式法则</strong>。</p>
+
+<details class="math-card">
+<summary>想拿笔算一下？看这个最小的例子（点开）</summary>
+<div class="collapse-content">
+<p>咱们把事情化简到就两个数。设一条最短的链：</p>
+<div class="formula">z = w × x　　L = z²</div>
+<p>这里把损失先简化成平方，好算。取 w = 3，x = 2。</p>
+<p><strong>先往前算</strong>：z = 3×2 = 6，L = 6² = 36。</p>
+<p><strong>再往回推</strong>，一步一步来：</p>
+<ul class="bullet-list">
+<li>损失对 z 的责任：dL/dz = 2z = 2×6 = 12。</li>
+<li>z 对 w 的关系：dz/dw = x = 2。</li>
+<li>一环扣一环，乘起来：dL/dw = 12 × 2 = 24。</li>
+</ul>
+<p>这个 24 就是 w 的梯度。它是正的，意思是 w 往大挪，损失会涨；那要降损失，更新就得往减号走——正好跟下一坎对上。</p>
+</div>
+</details>
+<div id="soft-3"></div>
+</section>
+
+<!-- 第 4 站 -->
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 反向传播：一次把所有梯度算清</h2>
+<p>把这些合起来，就是反向传播。</p>
+<p>先正常往前算一遍得到损失，然后从损失这个终点出发，用链式法则，沿计算链往回走。每经过一个参数，就把它的梯度算出来、记上。</p>
+<p>走到头，所有参数都领到了自己的梯度，一个不落。</p>
+<p>它不是瞎猜，是真算出来的，而且整趟很快——这就是机器能高效训练的底气。</p>
+<p>下面这个演示，你点“往回推一步”，看责任怎么从损失出发，一路亮着回到参数头上。</p>
+
+<div class="demo-card" id="backDemo"></div>
+<div id="soft-4"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：梯度（责任）、链式法则，还有反向传播这套“从终点往回算梯度”的办法。</p>
+<p>下一坎接着看：梯度领到了，参数到底怎么照着它改，才能让损失真的降下来？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-04.html">← 第 4 坎：损失</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-06.html">第 6 坎：更新 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-05.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '05';
+    var totalStations = 4;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    BackDemo.render(document.getElementById('backDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 1 坎：切书——把一本童话切成小碎块</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 1 坎　切书：把一本童话切成小碎块</h1>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>第一册里，咱们一直围着一句话转。那句话早被切成了 31 个小单元，每个单元都配好了一组能算的数。</p>
+<p>可那是我提前替你切好的。</p>
+<p>现在换你自己来。你手里是一整本安徒生童话，黑压压一大片文字。机器呢，它一个字都不认识，只会算数。</p>
+<p>头一道坎就来了：怎么把这一整页的文字，变成它能下手的东西？</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>把连续的文字切成小单元、给每个单元编个号，还得想办法别让编号表撑爆。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 12 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 最朴素的切法：一个字一个字切</h2>
+<p>先别急着搞复杂的。最笨的办法，就是一个字一个字地切。</p>
+<p>“小女孩在雪地里走”，切开就是：小｜女｜孩｜在｜雪｜地｜里｜走。</p>
+<p>干净利落，每个字都是一个小单元。标点也一样，“。”“，”各自算一个。</p>
+<p>这种小单元，咱们给它起个名字，叫 <strong>Token（词块）</strong>。</p>
+<p>可你马上会撞上两个麻烦。</p>
+<p>第一个，中文一个字一个意思还好，英文一个词是一串字母。“girl”要按字母切成 g-i-r-l，单个字母啥意思都没有，全给切碎了。</p>
+<p>第二个，意思相近的字，机器看不出关系。“女孩”和“女人”里头都有个“女”，它可不知道这俩沾亲带故。</p>
+<p>那按词切呢？</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 按词切，词表要爆炸</h2>
+<p>换个思路，按词切。</p>
+<p>“小女孩｜在｜雪地｜里｜走”，一个词一块，意思保住了。英文更顺，空格就是天然的切口。</p>
+<p>切完以后，把所有出现过的词拢一块儿，去重，每个词编一个号。这张表叫 <strong>词表（vocabulary）</strong>。机器看到编号，就知道是哪个词。</p>
+<p>听着挺好，对吧？麻烦在后头。</p>
+<p>同一个词，girl、girls、girl’s，在它眼里是三个完全不同的词，各占一个号。</p>
+<p>还有那些又长又少见的词，一本书里就露一回脸，也得给它留个位置。</p>
+<p>你喂的书越多，词表就疯长。更要命的是，冷不丁蹦出个词表里没有的词，它直接傻眼，只能给个“不认识”。</p>
+<div class="formula">按字切，意思碎了；按词切，词表炸了。</div>
+<p>有没有两全的办法？</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. BPE：把长词拆成常见小块</h2>
+<p>有。这就是这一坎最关键的主意：<strong>BPE，字节对合并</strong>。</p>
+<p>说穿了就一句话：别按整词，也别按单字，按“常见的小块”切。</p>
+<p>常见的小块，比如“女孩”“火柴”，老一起出现，就把它俩合成一块，当成一个单元。</p>
+<p>不常见的长词呢？拆。拆出来的小块在别处还能用得上。</p>
+<p>这样词表不用撑那么大，小块也都带着点意思，不会碎成单字母。</p>
+<p>具体怎么找出哪些小块该合并？办法很朴素：</p>
+<ul class="bullet-list">
+<li>先从单个字开始。</li>
+<li>数一数，哪两个小块挨在一起出现得最多，就把它俩合并成一个新块。</li>
+<li>再数，再合并，一轮一轮往下走。</li>
+</ul>
+<p>下面这个工作台，你先点上面的标签，看三种切法差在哪儿；再点“合并下一步”，看 BPE 怎么一步步把小块拼起来。</p>
+
+<div class="demo-card" id="cutDemo"></div>
+<div id="soft-3"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：Token、词表，还有 BPE 这个“按常见小块切”的折中办法。</p>
+<p>下一坎接着看：切是切好了，可机器怎么知道拿这些小块练什么？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="../index.html">返回目录</a>
+<a href="kan-02.html">第 2 坎：出题 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-01.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '01';
+    var totalStations = 3;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    CutDemo.render(document.getElementById('cutDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

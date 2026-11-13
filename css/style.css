@@ -2691,3 +2691,49 @@ sup { vertical-align: 0.6em; }
   .ra-num.bad { background: #7f1d1d; color: #fca5a5; }
   .ra-num.good { background: #14532d; color: #bbf7d0; }
 }
+
+/* ===== 两册总门廊封面（第二册整合） ===== */
+.illu { margin: 18px 0; }
+.illu svg {
+    width: 100%; height: auto; display: block;
+    border-radius: 16px; box-shadow: 0 6px 18px rgba(79, 70, 229, 0.12);
+}
+.illu-caption {
+    margin: 8px 2px 0; font-size: 13.5px; color: #6b7280;
+    line-height: 1.6; text-align: center;
+}
+.book-porch { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+.book-card {
+    border-radius: 12px; padding: 20px; border: 1px solid #e5e7eb;
+    background: #f9fafb; display: flex; flex-direction: column;
+}
+.book-card.b1 { border-top: 5px solid #2563eb; background: #f5f8ff; }
+.book-card.b2 { border-top: 5px solid #7c3aed; background: #faf7ff; }
+.book-step {
+    font-size: 12px; font-weight: 700; border-radius: 999px;
+    padding: 4px 12px; align-self: flex-start; margin-bottom: 10px;
+}
+.book-card.b1 .book-step { color: #1d4ed8; background: #dbeafe; }
+.book-card.b2 .book-step { color: #6d28d9; background: #ede9fe; }
+.book-card h3 { font-size: 18px; margin: 0 0 8px; line-height: 1.4; }
+.book-desc { font-size: 14px; color: #4b5563; flex: 1; }
+.book-meta { font-size: 13px; color: #6b7280; margin: 12px 0; }
+.book-btn {
+    display: block; text-align: center; padding: 10px 18px; border-radius: 6px;
+    color: #fff; font-size: 15px; min-height: 44px; line-height: 1.5;
+    text-decoration: none; border: 1px solid; border-bottom-width: 3px;
+}
+.book-card.b1 .book-btn { background: linear-gradient(#3b82f6, #2563eb); border-color: #1e3a8a; }
+.book-card.b2 .book-btn { background: linear-gradient(#8b5cf6, #7c3aed); border-color: #5b21b6; }
+
+@media (max-width: 600px) {
+    .book-porch { grid-template-columns: 1fr; }
+}
+
+@media (prefers-color-scheme: dark) {
+    .book-card { background: #1f2937; border-color: #374151; }
+    .book-card.b1 { background: #172554; }
+    .book-card.b2 { background: #2e1065; }
+    .book-desc, .book-meta { color: #cbd5e1; }
+    .illu-caption { color: #9ca3af; }
+}

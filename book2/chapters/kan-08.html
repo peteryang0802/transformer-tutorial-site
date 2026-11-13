@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 8 坎：层归一化——把尺度理整齐</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 8 坎　层归一化：把尺度理整齐</h1>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一坎，残差连接给深层留了条快车道，信号能稳稳传过去了。</p>
+<p>可还有个别扭的地方：每层算出来的数，尺度都不太一样，有的大有的小，乱糟糟的。</p>
+<p>这一坎，咱们看怎么把这些数，理到一个整齐的尺度上。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>数值尺度乱为什么让训练不稳，层归一化怎么把一组数拉到统一尺度。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 11 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 尺度乱，麻烦在哪</h2>
+<p>先看现象。每层吐出一组数，可这组数没什么规矩，这一轮可能都很小，下一轮又冒出几个特别大的。</p>
+<p>后面的层，得去适应这些忽大忽小的输入。尺度一乱，梯度也跟着乱，步子不好控制，训练容易打摆子。</p>
+<p>就好比你开车，油门一会儿特别灵、一会儿又没反应，这车就难开稳。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 归一化：把尺度拉齐</h2>
+<p>拿到一组数，先看它们的平均水平（均值）和分散程度（方差）。然后把每个数减去均值，再除以标准差（就是方差开个平方根），重新算一遍。实际算的时候还会加个很小的数，免得碰上除以零。</p>
+<div class="formula">新数 = (原数 − 均值) ÷ 标准差</div>
+<p>这么一处理，新的一组数均值变成 0，分散程度也统一了，不管原来多大，都被拉到同一个尺度上。</p>
+<p>机器还自己学两个小调节量，一个管放大缩小，一个管平移，好让它在“整齐”和“有用”之间找平衡。</p>
+<p>这一套，叫 <strong>层归一化</strong>。</p>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 为什么这样更稳</h2>
+<p>每层接收到的输入，尺度都在可控范围里，不会突然冒出个特别大的数把节奏带乱。</p>
+<p>尺度稳了，梯度就稳，学习率也好定，训练顺顺当当，不容易崩。</p>
+<p>它和残差连接是一对好搭档：一个管信号传得过去，一个管数值尺度不乱。</p>
+<p>下面这个演示，你点“归一化”，看那组乱跳的数，怎么被拉到整齐的尺度上。</p>
+
+<div class="demo-card" id="normDemo"></div>
+<div id="soft-3"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：尺度乱的麻烦，还有层归一化这套“减均值、除标准差”的整理办法。</p>
+<p>下一阶段接着看：从一句话，到一整本童话，数据多了，又会冒出哪些新麻烦？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-07.html">← 第 7 坎：残差连接</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-09.html">第 9 坎：数据划分 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-08.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '08';
+    var totalStations = 3;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    NormDemo.render(document.getElementById('normDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 12 坎：规模与工程——小机器怎么变大</title>
+<link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a><a href="../../index.html">总封面</a>
+</nav>
+
+<h1 class="chapter-title">第 12 坎　规模与工程：小机器怎么变大（翻现实手册）</h1>
+
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前面那台小机器，5917 个参数，CPU 上就能跑，本事也摸清楚了。</p>
+<p>可现实里那些能写文章、能聊天的大模型，是怎么从这小不点儿变大的？</p>
+<p>这一坎咱们不抠细节，就看每样东西，各自解决什么麻烦。</p>
+</div>
+
+<div class="chapter-guide">
+<p class="guide-row goal"><span class="guide-label">这一坎要解决</span>模型怎么变大、变大要花多少算力和显存，工业界又用哪些办法把它训起来。</p>
+<p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 14 分钟</p>
+</div>
+
+<div class="station-progress" id="stationProgress"></div>
+
+<!-- 第 1 站 -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 怎么把机器做大，做大真有用吗</h2>
+<p>一台机器的个头，主要看三样：参数总数 N（多少可调的数）、向量维度（一般写成小写 d）、喂进去多少数据。</p>
+<p>想变大，就是把层数加多、维度加宽、词表变大、数据喂更多。</p>
+<p>有个规律叫 <strong>规模定律</strong>：在不少实验里，模型、数据、算力一起往上加，损失大体稳稳往下走，能力有一定的可预期性。它是从大量经验里总结的趋势，不是哪台机器都严格成立的保证。</p>
+<p>还有个词叫 <strong>涌现</strong>：有些本事小模型一点没有，等规模过了某个坎，突然就冒出来。这词也有争议——到底是真“突然会了”，还是小模型本来就会一点、只是没到能看出来的程度，定义和原因都还在讨论。</p>
+<p>所以做大不是瞎烧钱，大概率能换来本事，但不是板上钉钉。</p>
+<div id="soft-1"></div>
+</section>
+
+<!-- 第 2 站 -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 做大了，算账给你看</h2>
+<p>第一笔，算力。有个实用估算：总算力约等于 <strong>6 × 参数数 × 训练 token 数</strong>，写成 6ND——这里的大写 D 指训练 token 数，跟上面那个维度小写 d 不是一回事，只是恰好都用了 d 这个字母。这是个粗略估算，参数和数据越大，这数涨得飞快，得用专门的芯片算。</p>
+<p>第二笔，显存。训练时不光存参数，还要存梯度和优化器状态。用 Adam 加混合精度，平均一个参数训练时约占 <strong>16 字节</strong>。</p>
+<p>参数到了几十亿、上万亿，光显存就得堆一大堆卡。</p>
+<p>下面这个计算器，你点不同规模，看显存和算力怎么往上涨。</p>
+
+<div class="demo-card" id="scaleDemo"></div>
+<div id="soft-2"></div>
+</section>
+
+<!-- 第 3 站 -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 怎么把这么大的机器训起来</h2>
+<p>一个芯片装不下、算不动，就立对应的工程办法，遇到什么麻烦解决什么：</p>
+<ul class="bullet-list">
+<li><strong>数据并行</strong>：模型复制到好几张卡，各算各的一批，再把梯度凑一块儿。解决单卡算得慢。</li>
+<li><strong>张量 / 流水线并行</strong>：模型一张卡装不下，就横着切开（每层分多卡）或竖着切开（不同层放不同卡）。</li>
+<li><strong>混合精度</strong>：有些数用更省的 16 位存算，关键处留 32 位。省显存、更快，还不掉精度。</li>
+<li><strong>AdamW</strong>：Adam 的改进，把“管住参数别乱跑”做得更规矩，训练更稳。</li>
+</ul>
+<p>你不用记名字，就记着一个思路：麻烦不断，办法也不断。</p>
+<div id="soft-3"></div>
+</section>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一坎收个尾</span></p>
+<p>这一坎拿到：规模定律、算力和显存两笔账，还有并行、混合精度这些“解决麻烦”的工程办法。</p>
+<p>下一坎接着看：机器练好了，怎么让它一句一句把话接出来，还能调大胆程度？</p>
+</div>
+
+<nav class="nav-bar">
+<a href="kan-11.html">← 第 11 坎：困惑度</a>
+<a href="../index.html">返回目录</a>
+<a href="kan-13.html">第 13 坎：解码与童话搅拌机 →</a>
+</nav>
+
+<script src="../js/progress.js?v=20261114r1"></script>
+<script src="../js/common-ui.js?v=20261114r1"></script>
+<script src="../js/kan-12.js?v=20261114r1"></script>
+<script>
+(function () {
+    var chapterId = '12';
+    var totalStations = 3;
+    renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+    ScaleDemo.render(document.getElementById('scaleDemo'));
+    for (var i = 1; i <= totalStations; i++) {
+        var m = document.getElementById('soft-' + i);
+        if (m) makeSoftMark(m, chapterId, i - 1);
+    }
+    observeStations(chapterId, totalStations);
+})();
+</script>
+</body>
+</html>
