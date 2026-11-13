@@ -29,6 +29,10 @@
         ];
     }
 
+    function rgba(c, a) {
+        return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')';
+    }
+
     function renderAttentionStage(container) {
         container.classList.add('demo-lab', 'as-stage');
 
@@ -99,16 +103,6 @@
         resultBox.appendChild(rtext);
         container.appendChild(resultBox);
 
-        /* 声音混音：点喇叭才响，音量跟着权重走 */
-        var mixer = window.SoundMix ? window.SoundMix.attach(container, function () {
-            var w = softmax();
-            return {
-                tracks: CANDS.map(function (c, i) {
-                    return { label: c.word, freq: c.freq, weight: w[i] };
-                })
-            };
-        }) : null;
-
         function markDone() {
             var ch = container.dataset.chapter, st = container.dataset.station;
             if (ch && st != null && typeof markStationDone === 'function') {
@@ -142,7 +136,7 @@
                     ' L ' + (cx + halfW) + ' ' + topY + ' Z';
                 beams[i].setAttribute('d', d);
                 beams[i].setAttribute('fill', CANDS[i].rgb);
-                beams[i].setAttribute('opacity', 0.22 + weights[i] * 0.62);
+                beams[i].setAttribute('opacity', 0.12 + weights[i] * 0.83);
             });
         }
 
@@ -150,9 +144,19 @@
             var w = softmax();
             rangeLabel.textContent = '温度 ' + fmt(T);
             candCards.forEach(function (card, i) {
+                var wi = w[i];
                 card.querySelector('.as-vote').textContent =
-                    '得票 ' + Math.round(w[i] * 100) + '%';
+                    '得票 ' + Math.round(wi * 100) + '%';
+                // 卡片背景：权重越高，候选色越饱满，像被灯照亮
+                card.style.background = rgba(CANDS[i].color, 0.08 + wi * 0.85);
                 card.style.borderColor = CANDS[i].rgb;
+                // 背景饱满时文字切白色，保证可读
+                var lit = wi > 0.5;
+                card.querySelector('.as-cword').style.color = lit ? '#ffffff' : '';
+                card.querySelector('.as-cvec').style.color = lit ? 'rgba(255,255,255,0.85)' : '';
+                var vote = card.querySelector('.as-vote');
+                vote.style.background = lit ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.72)';
+                vote.style.color = lit ? '#ffffff' : CANDS[i].rgb;
             });
             layoutBeams(w);
 
@@ -166,7 +170,6 @@
             rtext.innerHTML =
                 '<div class="as-rlabel">按权重加回来</div>' +
                 '<div class="as-rvec">[' + fmt(r[0]) + ', ' + fmt(r[1]) + ']</div>';
-            if (mixer) mixer.sync();
         }
 
         requestAnimationFrame(paint);

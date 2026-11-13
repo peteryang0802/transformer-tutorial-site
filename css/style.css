@@ -469,7 +469,7 @@ sup { vertical-align: 0.6em; }
     .tf-point { color: #d1d5db; }
     .tf-human-hint { color: #9ca3af; }
     .tf-focus-label { color: #9ca3af; }
-    .as-query, .as-cand, .as-result { background: #1f2937; border-color: #374151; }
+    body .as-query, body .as-cand, body .as-result { background: #1f2937; border-color: #374151; }
     .as-qvec { color: #a5b4fc; }
     .as-cvec, .as-tlabel, .as-rlabel { color: #9ca3af; }
     .as-vote { background: #374151; color: #e5e7eb; }
