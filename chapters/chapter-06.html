@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 6 篇：带着问题去找（Query）</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 6 篇　带着问题去找：Query 和点积</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>我们把一句话拆成 31 个 Token、转向量、加位置，又让每个位置能直接拿到句子里任意 Token 的向量。可到底参考哪些词、权重占多少，都是我们手动设定的，不可能每句话都靠人工调。这一篇想试试，能不能让每个 Token 按自己的需要，自己选要关注什么。</p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>让电脑用当前位置的 <span class="mi">Q</span> 自动给候选资料打匹配分。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 9–12 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 电脑怎么自己确定配比</h2>
+<p>上一篇的 3/4、1/4 是手工定下的固定配方，不论处理哪个位置，都套同一套。</p>
+<p>可读“她”想知道她指谁，读“蓝色”想知道什么东西是蓝的，两套线索不一样。一套固定配比，怎么顾得过来？</p>
+<p>想让电脑自主选，就得给它一套判断依据。</p>
+<p>借鉴我们人读句子：</p>
+<ul class="bullet-list">
+<li>读“她”，心里冒出“她指谁”，回头找人物。</li>
+<li>读“蓝色”，问题换成“什么东西是蓝的”，去关联“封面”。</li>
+</ul>
+<p>问题不一样，要找的线索就不一样。所以不能只看手上有什么素材，还得带上“我现在要找什么”。</p>
+<p>把心里这个问题转成电脑能算的数字，最简单的办法：直接拿当前位置的向量来做比对。</p>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 先单独演示“她”的检索</h2>
+<p>这是一次独立的手工演算，不和第 2、3 篇的数值串在一起：“她” [1, 0]，“妹妹” [4, 0]，“封面” [0, 4]。</p>
+<p>拿“她”的 [1, 0] 发起检索。这一组用来查询比对的向量，叫<strong>查询向量</strong>（Query，简称 <span class="mi">Q</span>），就对应心里那个问题。</p>
+<p><span class="mi">Q</span> 跟每一份候选资料一一比对，算出一个匹配分。</p>
+<p>这个分可以理解成这次检索的合拍程度：</p>
+<ul class="bullet-list">
+<li>同一次查询里，分数越高，后面越多参考这个位置。</li>
+<li>它不是固定不变的永久权重。</li>
+<li>也不等于答案正确的概率。</li>
+</ul>
+<figure class="tutorial-figure">
+<img alt="第23处她[1,0]本次直接作Q，分别匹配第20处妹妹[4,0]和第11处封面[0,4]" class="zoomable" height="501" loading="lazy" src="../assets/images/img-16.webp" width="1100"/>
+<figcaption>查询来自“她”，候选是“妹妹”和“封面”，逐份去比。</figcaption>
+</figure>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 两个向量怎么算匹配分</h2>
+<p>只有两个数字的向量，可以画成坐标系里的箭头。</p>
+<p>先用甜辣口味讲：用 [喜甜, 喜辣] 记口味。</p>
+<ul class="bullet-list">
+<li>江浙人偏甜，写成 [1, 0]。</li>
+<li>四川人偏辣，写成 [0, 1]。</li>
+</ul>
+<p>两支箭头长度一样、指向不同。都爱甜就重合，一甜一辣夹角就是 90 度。夹角大小，能看出合不合拍。</p>
+<figure class="tutorial-figure">
+<img alt="两种口味偏好的坐标箭头：两人都爱甜箭头重合夹角0度，一甜一辣箭头垂直夹角90度" class="zoomable" height="611" loading="lazy" src="../assets/images/img-17.webp" width="1100"/>
+<figcaption>口味一样箭头就重合，不重合箭头就岔开，先看朝向。</figcaption>
+</figure>
+<p>可电脑看不了图，只能算。把第一个向量写成横行，第二个转成竖列，对应位置相乘、再把乘积加起来，这叫<strong>点积</strong>。两个向量记作 <span class="mi">a</span>、<span class="mi">b</span>，<span class="mi">b</span> 转置记作 <span class="mi">b<sup>T</sup></span>，点积就写成 <span class="mi">ab<sup>T</sup></span>。点积同时受方向和长度影响，这里刻意让向量等长，方便单独看方向，长度的影响留到后面。</p>
+<details class="collapse math-card">
+<summary><span class="math-tag">数学小卡片</span>点积怎么算？转置又是什么？</summary>
+<div class="collapse-content">
+<p><strong>转置</strong>就是把行和列对调：原来的横行变成竖列，记作 <span class="mi">b<sup>T</sup></span>。这样第一个向量横写、第二个竖摆，才能一格对一格。</p>
+<p><strong>点积</strong>就是对应位置相乘、再把乘积全加起来，最后得到一个数。下面两个向量，初始正好是“她” [1, 0] 对“妹妹” [4, 0]，点积得 4。</p>
+<div id="dotLab"></div>
+</div>
+</details>
+<div class="demo-card" data-chapter="06" data-station="2" id="qAngleDemo"></div>
+<div id="soft-3"></div>
+</section>
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 回到“她”，再换成“蓝色”</h2>
+<p>“她”的 <span class="mi">Q</span> 是 [1, 0]：</p>
+<ul class="bullet-list">
+<li>跟“妹妹” [4, 0] 点积，得 4。</li>
+<li>跟“封面” [0, 4] 点积，得 0。</li>
+</ul>
+<p>于是电脑优先参考妹妹。</p>
+<p>封面这 0 分，不是拉力小一点，是这一下根本没拉。</p>
+<figure class="tutorial-figure">
+<img alt="坐标系里她的Q[1,0]、妹妹[4,0]、封面[0,4]三支箭头，她和妹妹夹角0度、和封面90度" class="zoomable" height="611" loading="lazy" src="../assets/images/img-18.webp" width="1100"/>
+<figcaption>三支箭头分别朝右、朝右、朝上，夹角一眼能看出合拍程度。</figcaption>
+</figure>
+<p>再把 <span class="mi">Q</span> 换成“蓝色” [0, 1]，两份候选资料不变：</p>
+<ul class="bullet-list">
+<li>跟“妹妹”得 0。</li>
+<li>跟“封面”得 4。</li>
+</ul>
+<p>重点关注的对象，跟着换了。</p>
+<p>候选完全没变，只换了查询 <span class="mi">Q</span>，结果就变。死板的固定配比，终于能跟着“当前要找什么”灵活变化。</p>
+<p>这套办法暂且叫<strong>Q 点积匹配法</strong>。</p>
+<figure class="tutorial-figure">
+<img alt="她的Q[1,0]匹配妹妹4分封面0分，蓝色的Q[0,1]匹配妹妹0分封面4分，资料不变换Q结果就变" class="zoomable" height="477" loading="lazy" src="../assets/images/img-19.webp" width="1100"/>
+<figcaption>资料没换，只换“这次谁来问”，匹配结果就整个反过来。</figcaption>
+</figure>
+<p>静态图先把两次匹配摆出来。下面亲手拖一拖，看看 0 分那根弹簧为什么根本拉不动。</p>
+<div class="demo-card" data-chapter="06" data-station="3" id="springPullDemo"></div>
+<div id="soft-4"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：用 <span class="mi">Q</span> 和候选向量点积，匹配分会随查询变化。</p><p>下一篇接着看：把点积分转成总和为 1 的比例。</p></div><nav class="nav-bar">
+<a href="chapter-05.html">← 第 5 篇</a>
+<a href="chapter-07.html">第 7 篇 →</a>
+</nav>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/math-interact.js?v=20261113w"></script>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/spring-pull.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '06';
+            renderDotLab(document.getElementById('dotLab'));
+            var totalStations = 4;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            DemoInteract.renderQAngle(document.getElementById('qAngleDemo'));
+            renderSpringPull(document.getElementById('springPullDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

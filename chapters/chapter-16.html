@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 16 篇：只准看已经写出来的（掩码）</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 16 篇　只准看已经写出来的：因果掩码</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一篇搭完了编码器，读懂人话的路有了，可还得琢磨怎么让电脑说人话。先试个容易准备的办法：拿现成的完整句子出接龙题。</p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>给回答加因果掩码，保证生成时只能看前面的内容。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 10–13 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 用接龙训练写人话</h2>
+<p>父母教孩子说话，常说前半句，让孩子接后面的词。电脑也照这个办法续写。</p>
+<p>真接着写时，后面的词还没出来，自然用不上。</p>
+<p>拿完整句子练习，也得守同一条规矩：每个位置只能用当前位置和前面已经给出的文字。</p>
+<p>练习时偷看后文，真写时却没有这条线索。练的就不是续写本事。</p>
+<p>先写一句短话：书｜借给｜了｜妹妹。给一段开头，让它预测紧跟的下一个 Token，这段开头叫<strong>前缀</strong>。</p>
+<figure class="tutorial-figure">
+<img alt="像父母带孩子接龙，说出前面部分让孩子补后面，训练写人话" class="zoomable" height="733" loading="lazy" src="../assets/images/img-77.webp" width="1100"/>
+<figcaption>接龙，练说话。</figcaption>
+</figure>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 一句话，一鱼四吃</h2>
+<p>同一句短话，可以从不同位置出题：</p>
+<ul class="bullet-list">
+<li>给“书｜借给”，能猜“了”。</li>
+<li>只给“书”，能猜“借给”。</li>
+</ul>
+<p>第一个词前面什么都没有，就在最前面放一个特殊标记〈起〉。</p>
+<p>它有自己的编号和向量。电脑从这组数开始猜第一个词。</p>
+<p>最后写出来的话里，看不到〈起〉。</p>
+<p>这么一句四块的短句，出了四道接龙题。这也埋下隐患：前三道题的答案，正好是后面题目要用的文字，放一起算，会不会被提前看见？</p>
+<div class="demo-card" data-chapter="16" data-station="1" id="fourQuizzesDemo"></div>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 四题一起算，隐患在哪</h2>
+<p>把〈起〉、书、借给、了依次排成四行。每行算自己的 <span class="mi">q</span>、<span class="mi">k</span>、<span class="mi">v</span>。</p>
+<p>麻烦在第二行：</p>
+<ul class="bullet-list">
+<li>第二行的“书”要猜“借给”。</li>
+<li>可“借给”就摆在第三行。</li>
+</ul>
+<p>如果还照自注意力查整张表，“书”往下一看就能瞄到答案。</p>
+<p>先瞄一眼再答，就不用研究语言规律了，研究视力就够了。</p>
+<p>四行要一起算，但每行不能把后面的答案取回来。</p>
+<div id="soft-3"></div>
+</section>
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 怎么“盖住”后文</h2>
+<p>像拿一张纸挡住。</p>
+<p>第 <span class="mi">i</span> 行只准看第 1 到第 <span class="mi">i</span> 行，包含自己。</p>
+<p>允许读取的位置，正好组成一个下三角。右上方全挡住。</p>
+<p>这套规则叫<strong>掩码</strong>。</p>
+<p>位置号管“排第几”。掩码管“这回准看哪几”。</p>
+<p>想挡住，不能把分数填 0。</p>
+<p>因为 softmax 第一步 <span class="mi">e<sup>0</sup></span>＝1，它仍会分到权重。</p>
+<p>要把盖住的格子写成 <span class="mi">−∞</span>。取指数后是 0，就分不到任何权重。</p>
+<p>遮挡要在送入 softmax 之前完成。</p>
+<div class="formula">
+            盖住的位置 <span class="mi">x</span> ← <span class="mi">−∞</span>，于是 <span class="mi">e<sup>−∞</sup></span> = 0
+        </div>
+<p>已经写出来的内容，能影响后续。</p>
+<p>没生成的内容，不能反过来给前面传信息。</p>
+<p>这叫<strong>因果掩码</strong>。</p>
+<p>对照验证：</p>
+<ul class="bullet-list">
+<li>加上遮挡后，后面换一个词，前面取回的向量不变。</li>
+<li>改前面的输入，后面仍能跟着变。</li>
+</ul>
+<p>这样练习和真写的规矩就对上了。</p>
+<div class="demo-card" data-chapter="16" data-station="3" id="maskDemo"></div>
+<p>先在电路板上看遮挡怎么生效。再用下三角网格，逐行确认哪些位置能看。</p>
+<div class="demo-card" data-chapter="16" data-station="3" id="triangleDemo"></div>
+<p>网格确认后，再做前后对照：后面的内容变了，前面的结果不跟着变。</p>
+<figure class="tutorial-figure">
+<img alt="保持遮挡只改后面的内容，前面的结果不变，验证遮挡没误伤前面" class="zoomable" height="825" loading="lazy" src="../assets/images/img-80.webp" width="1100"/>
+<figcaption>改后面，前面不跟着变。</figcaption>
+</figure>
+<div id="soft-4"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：因果掩码，回答每一行只能看自己和前面。</p><p>下一篇接着看：让回答回查原句资料。</p></div><nav class="nav-bar">
+<a href="chapter-15.html">← 第 15 篇</a>
+<a href="chapter-17.html">第 17 篇 →</a>
+</nav>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/circuit-board.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '16';
+            var totalStations = 4;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            CircuitBoard.renderMask(document.getElementById('maskDemo'));
+            StepInteract.renderFourQuizzes(document.getElementById('fourQuizzesDemo'));
+            StepInteract.renderTriangle(document.getElementById('triangleDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

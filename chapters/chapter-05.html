@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 5 篇：让“她”找到远处的“妹妹”</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 5 篇　让“她”找到远处的“妹妹”</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前面几篇我们把长句切成 31 个 Token，排成矩阵 <span class="mi">X</span>。每行向量加好了位置编码，也把前面两个 Token 的信息收进来，“讲”换“读”时“故事”会变。</p>
+<p>可这里碰到麻烦：句子后半段的“她”，真正要找的“妹妹”不在它前面紧邻的两个 Token 里。</p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>打通远距离查找思路，并看清权重不同会取回不同结果。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 9–12 分钟</p></div>
+<div class="demo-card" id="recapTokenStrip"></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 往前多看一个，行不行</h2>
+<p>看“妹妹｜，｜因为｜她”：从“她”往前数，第一是“因为”，第二是逗号，目标“妹妹”落在第三，读三个刚好够到。</p>
+<p>可线索再远一点呢？把“下周”挪到“她”前面，变成“妹妹｜，｜因为｜下周｜她”，“妹妹”跑到第四了。</p>
+<p>线索每挪一步，我们就得不断扩大往前的窗口。这个办法很被动。</p>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 想法一：找人接力传话</h2>
+<p>排队隔太远没法直接喊话，就托中间的人一层层递过去。“她”往前两步读到“因为”，而“因为”往前两步刚好读到“妹妹”，“因为”就是传话的人。</p>
+<ul class="bullet-list">
+<li>第一轮，第 22 行“因为”参考“妹妹”和逗号，把它俩平均加回去，“妹妹”的线索传到“因为”。</li>
+<li>第二轮，第 23 行“她”参考上一轮算完的“因为”和逗号，线索顺着“因为”传到“她”。</li>
+</ul>
+<p>得等第一轮算完，“她”才能用上“因为”的新向量。</p>
+<p>短板也明显：</p>
+<ul class="bullet-list">
+<li>隔得越远，轮次越多。</li>
+<li>沿路无关词语的信息也会混进来，容易走样。</li>
+</ul>
+<p>这里得强调一条和人的习惯相悖的认知：<strong>电脑只认得数字</strong>。位置、先后、谁和谁更近、谁更重要，所有这些都得变成数字放进向量，靠计算传递。人靠文字理解意思，机器全程只有数字和运算。</p>
+<div class="demo-card" data-chapter="05" data-station="1" id="relayDemo"></div>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 想法二：通讯录就在手上</h2>
+<p>我们有现成的矩阵 <span class="mi">X</span>，“妹妹”的向量就在第 20 行，电脑完全可以直接调取这一行，不用中间人。</p>
+<p>先试最简单的方案：全部一视同仁，把 31 行向量做平均。结果“她”也好、“蓝色”也好，拿到的都是同一个平均向量。</p>
+<p>这就出问题了：读“她”想找指代的人，读“蓝色”想找被修饰的物品，两个需求完全不一样，返回的信息却一样。</p>
+<p>就像去奶茶店，不管点什么，拿回来的都是一模一样的标准款。</p>
+<p>那同样一批素材，能不能调整配比，调出不一样的结果？</p>
+<figure class="tutorial-figure">
+<img alt="处理她和处理蓝色两个不同问题，都各取妹妹封面一半，取回同样的 [2,2]，平均没用到这次找什么" class="zoomable" height="458" loading="lazy" src="../assets/images/img-13.webp" width="1100"/>
+<figcaption>问题问得不一样，平均取回的却一样，这套取法还没带上“这次找什么”。</figcaption>
+</figure>
+<div id="soft-3"></div>
+</section>
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 想法三：比例可以调</h2>
+<p>回头看第 4 篇那个“各参考一半”，其实就是两份占一样的比例。现在把比例调成不一样的，看看能差出多少。</p>
+<p>做个简化小实验，只留两个 Token：</p>
+<ul class="bullet-list">
+<li>“妹妹”用 [4, 0]。</li>
+<li>“封面”用 [0, 4]。</li>
+<li>对半配比，得到 [2, 2]。</li>
+<li>把“妹妹”调到 3/4，得到 [3, 1]。</li>
+<li>把“封面”调到 3/4，得到 [1, 3]。</li>
+</ul>
+<p>数据源不变，只要改两边占比，拿到的向量就完全不同。</p>
+<figure class="tutorial-figure">
+<img alt="奶茶类比：同样茶和奶，调成一半一半、茶多、奶多三种口味，每杯一样满" class="zoomable" height="486" loading="lazy" src="../assets/images/img-14.webp" width="1100"/>
+<figcaption>同样两样原料，比例不一样，调出的口味就不一样。</figcaption>
+</figure>
+<p>奶茶图先讲口味。下面换成数字，看比例怎么改变最后四格。</p>
+<figure class="tutorial-figure">
+<img alt="妹妹封面按 3/4 与 1/4 两种比例混合，分别得到 [3,1] 和 [1,3]，候选不变比例变结果就变" class="zoomable" height="450" loading="lazy" src="../assets/images/img-15.webp" width="1100"/>
+<figcaption>候选不变，只改取用比例，混合结果就跟着变。</figcaption>
+</figure>
+<p>可配比写死，还是治标不治本。固定配方意味着“她”和“蓝色”依旧套同一套权重。</p>
+<p>我们想要更灵活的效果：</p>
+<ul class="bullet-list">
+<li>处理“她”、需要找人时，自动给“妹妹”高权重。</li>
+<li>处理“蓝色”、需要找物品时，自动给“封面”高权重。</li>
+</ul>
+<p>电脑手上有当前位置的向量，还有整张矩阵 <span class="mi">X</span>。能不能用正在处理的这一行，跟 <span class="mi">X</span> 里每一行比一比，算出这一次每一行该分多大权重？</p>
+<div class="demo-card" data-chapter="05" data-station="3" id="mixSliderDemo"></div>
+<div id="soft-4"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：直接访问全句的思路，以及不同权重会产生不同结果。</p><p>下一篇接着看：让电脑自己算匹配分。</p></div><nav class="nav-bar">
+<a href="chapter-04.html">← 第 4 篇</a>
+<a href="chapter-06.html">第 6 篇 →</a>
+</nav>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/sentence-data.js?v=20261113w"></script>
+<script src="../js/token-strip.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '05';
+            var totalStations = 4;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            TokenStrip.render(document.getElementById('recapTokenStrip'), {
+                title: '原句的 31 个位置（数字是位置号，不是 Token 编号）',
+                showNumbers: true
+            });
+            DemoInteract.renderMixSlider(document.getElementById('mixSliderDemo'));
+            StepInteract.renderRelay(document.getElementById('relayDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

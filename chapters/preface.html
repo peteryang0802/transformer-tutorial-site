@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>写在前面</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1>写在前面：我想从一句话开始，把 Transformer 重新搭一遍</h1>
+<p>过去几年，我用了不少 AI 工具，也零碎读了些技术原理的书。我一直觉得，想了解一个工具，最好的办法是弄懂它的原理。可拿 Transformer 来说，我没找到一份门槛够低的教程——适合本职工作忙、大学数学只剩个印象的人看的那种。</p>
+<p>于是就有了这个系列的第一部：《从一句话出发逐步构造 Transformer》。</p>
+<h2>先做个设定</h2>
+<p>我们都生活在一个没有任何 AI 知识的平行世界里。这个世界数学很发达，我们手里有一台算力够强的电脑。现在想让电脑实现两个能力：<strong>看得懂人话，说得出人话</strong>。</p>
+<p>结合我们从小学习语文的经历，我们有两点朴素的直觉：</p>
+<ul class="bullet-list">
+<li>第一，研究人话，得先把句子拆成一个一个的小单元。电脑擅长处理数字，先把一句话拆成小块，再想办法用数字表示。这样，研究一句话就能变成电脑能跑的计算。</li>
+<li>第二，语言里的规律，藏在大量例子里。我们很难把搭配规律用清单全列出来，但从小听人说话、看书，就慢慢会了。电脑是不是也能从大量文字里，靠反复计算摸出规律？</li>
+</ul>
+<p>带着这两点直觉，我们从一句普通的中文长句出发，看能不能搭出 Transformer 的核心算法。</p>
+<h2>先体会一下：同一句话，两副面孔</h2>
+<p>我们读字，电脑读数。下面花一分钟玩一玩，看看同一句话在电脑眼里长什么样。</p>
+<div id="twoFacesDemo"></div>
+<h2>坦白一件事</h2>
+<p>这教程不是我关起门一个人啃下来的。查资料、验证、还有贯穿全书的长例句，我都用了主流 AI 工具帮忙；但走哪条路、每一步怎么取舍，最后是我自己拿的主意。工具帮我查、帮我试错，往哪走得自己定，真出了错，责任在我，不在工具。</p>
+<p>我不敢保证每处都讲得对、讲得清楚，毕竟我不是 AI 业者；看到错误或读不懂的地方，敬请批评指正。</p>
+<p class="tip-text">老规矩，我说的可能都是错的。</p>
+<nav class="nav-bar">
+<a href="chapter-01.html">开始第 1 篇 →</a>
+</nav>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/anchor-lines.js?v=20261113w"></script>
+<script src="../js/two-faces.js?v=20261113w"></script>
+<script>
+        renderTwoFaces(document.getElementById('twoFacesDemo'));
+    </script>
+</body>
+</html>

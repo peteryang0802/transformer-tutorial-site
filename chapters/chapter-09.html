@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 9 篇：比例该乘在哪组数上（Value）</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 9 篇　比例该乘在哪组数上：Value</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前面把长句排成数字。上一篇把查找两头分开：谁来查，就用谁的 <span class="mi">Q</span> 跟对方的 <span class="mi">K</span> 算分，再照第 7 篇的办法换成比例。</p>
+<p>可这比例到底该乘在哪组数上？这一篇解决它。</p>
+<figure class="tutorial-figure">
+<img alt="前情回顾：长句已排成一行行数字，电脑试着用这些数找线索" class="zoomable" height="733" loading="lazy" src="../assets/images/img-27.webp" width="1100"/>
+<figcaption>第 9 篇前情回顾。</figcaption>
+</figure>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>分开 <span class="mi">Q</span>、<span class="mi">K</span>、<span class="mi">V</span> 的用途，搭出一版自注意力流程。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 10–13 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 分数有了，接下来取哪组</h2>
+<p class="tip-text">这一篇补最后一块：分数不直接改输入，要按比例乘到 <span class="mi">V</span> 上取回。</p>
+<p>拿“小明”这次查询：“借给”得 1 分，“妹妹”得 -1 分。交给 softmax 后，“借给”约 88.1%，“妹妹”约 11.9%。</p>
+<p>这 88.1% 该乘哪组数？是“借给”原来的 [0,1]，还是刚才转出来、拿去打分的 [1,0]？</p>
+<p>我们本来只想改打分的办法，难道连要取回的资料，也得跟着变？</p>
+<p>再想宝宝照片：靠眼睛的形状和位置认出眼睛，找到以后，想看的却是眼睛的颜色。</p>
+<p>帮我们找到的线索，和想知道的东西，原来是两回事。</p>
+<p>转箭头，是为了让 <span class="mi">K</span> 更适合打分；取回的，应该是另一组数。</p>
+<figure class="tutorial-figure">
+<img alt="暂时拿各处原来的输入向量当V，借给的V是[0,1]" class="zoomable" height="688" loading="lazy" src="../assets/images/img-28.webp" width="1100"/>
+<figcaption>先拿输入向量本身当 <span class="mi">V</span>。</figcaption>
+</figure>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 值向量 Value，QKV 怎么分工</h2>
+<p>这组被取回、作为结果值的，叫<strong>值向量</strong>（Value，记作 <span class="mi">V</span>）。</p>
+<p>哪一处的 <span class="mi">K</span> 帮我们算出比例，就照这个比例，去取同一处的 <span class="mi">V</span>。</p>
+<p>目前暂时拿各处原来的输入当 <span class="mi">V</span>。</p>
+<ul class="bullet-list">
+<li>“借给”的 <span class="mi">V</span> [0,1]，乘 88.1%。</li>
+<li>“妹妹”的 <span class="mi">V</span> [-1,-1]，乘 11.9%。</li>
+<li>加起来，约 [-0.119, 0.762]。</li>
+</ul>
+<p>这就是“小明”取回的向量。</p>
+<p>这一篇输入转 90° 算 <span class="mi">K</span>，<span class="mi">Q</span> 和 <span class="mi">V</span> 都直接用原输入。所以同一位置的 <span class="mi">Q</span> 和 <span class="mi">V</span> 数值一样，干的活却不同。</p>
+<p>借宝宝照片记分工：</p>
+<ul class="bullet-list">
+<li><span class="mi">Q</span> 像带去的问题。</li>
+<li><span class="mi">K</span> 像照片上供辨认的线索。</li>
+<li><span class="mi">V</span> 像找到那一块后，能用上的资料。</li>
+</ul>
+<div class="demo-card" data-chapter="09" data-station="1" id="qkvDemo"></div>
+<p>点完演示，再用这张宝宝照片把三个角色记牢。</p>
+<figure class="tutorial-figure">
+<img alt="宝宝照片理解QKV分工：Q像要查什么、K像去哪找、V像找到后能用的资料" class="zoomable" height="550" loading="lazy" src="../assets/images/img-29.webp" width="1100"/>
+<figcaption><span class="mi">Q</span> 管问什么，<span class="mi">K</span> 管去哪找，<span class="mi">V</span> 管拿回什么。</figcaption>
+</figure>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 回到长句：自注意力和并行</h2>
+<p>矩阵 <span class="mi">X</span> 有 31 行。从每个位置自己那行，分别得到 <span class="mi">Q</span>、<span class="mi">K</span>、<span class="mi">V</span>，按句子顺序排成三张表，各 31 行、每行两格。</p>
+<p>跟着“妹妹”查一次：</p>
+<ul class="bullet-list">
+<li>拿她的 <span class="mi">Q</span>，跟 31 处 <span class="mi">K</span>（含她自己）点积。</li>
+<li>31 个分数一起 softmax。</li>
+<li>再按比例乘各处 <span class="mi">V</span>。</li>
+<li>合成一个向量，记在“妹妹”那行。</li>
+</ul>
+<p>31 个位置各查一次，就有 31 份结果。</p>
+<p>发起查询的 <span class="mi">Q</span> 和供查找的 <span class="mi">K</span>、<span class="mi">V</span> 都来自同一句话，这叫<strong>自注意力</strong>。“自”说的是，从自己的各处找线索。</p>
+<p>取回结果，再逐格加回本轮输入 <span class="mi">X</span>。</p>
+<p class="tip-text">这里先记住一个代价：每个位置都要和所有位置算一次，所以注意力很灵活，但句子越长，计算和显存压力越大。</p>
+<p>各处用自己的输入，就能算出 <span class="mi">Q</span>、<span class="mi">K</span>、<span class="mi">V</span>，不用等别人先算完，可以同时开工、同时查找，这叫<strong>并行计算</strong>。</p>
+<p>能让电脑一起算，大规模训练就更容易。这也是 Transformer 被广泛用来做大语言模型的一个重要原因。</p>
+<div class="demo-card" data-chapter="09" data-station="2" id="attentionStepsDemo"></div>
+<div class="formula">
+            Attention(<span class="mi">Q,K,V</span>) = softmax(<span class="mi">QK<sup>T</sup></span>/<span class="mi">√d</span>)<span class="mi">V</span>
+</div>
+<p class="tip-text">公式里先写完整版本；除以 <span class="mi">√d</span> 这一步为什么要做，第 11 篇会细讲。</p>
+<div class="demo-card" data-chapter="09" data-station="2" id="dataFlowDemo"></div>
+<p class="tip-text">课堂示例数值：这里的数字用来讲清数据流向，不承接前面每一组手算值。</p>
+<figure class="tutorial-figure">
+<img alt="各处QKV可以同时算、同时查找，各拿回一份" class="zoomable" height="688" loading="lazy" src="../assets/images/img-32.webp" width="1100"/>
+<figcaption>不用排队，各处能同时开工。</figcaption>
+</figure>
+<div id="soft-3"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：<span class="mi">Q</span>、<span class="mi">K</span>、<span class="mi">V</span> 分工和一版自注意力流程。</p><p>下一篇接着看：找一张能同时满足新旧题的 <span class="mi">W<sub>K</sub></span>。</p></div><nav class="nav-bar">
+<a href="chapter-08.html">← 第 8 篇</a>
+<a href="chapter-10.html">第 10 篇 →</a>
+</nav>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '09';
+            var totalStations = 3;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            DemoInteract.renderQKV(document.getElementById('qkvDemo'));
+            StepInteract.renderAttentionSteps(document.getElementById('attentionStepsDemo'));
+            StepInteract.renderDataFlow(document.getElementById('dataFlowDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 4 篇：让前面的词也参加计算</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 4 篇　让前面的词也参加计算</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前 3 篇我们把长句拆成 31 个 Token，给 Token 配起始向量，再给每个位置加上自己的位置数字，现在 31 个位置各有一行能算的数。这一篇试着让前面的词也参加计算。</p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>让前面的 Token 影响当前位置，先把邻词变化传进来。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 8–10 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. “讲”换成“读”，“故事”怎么没变</h2>
+<p>只看句尾，把“讲”换成“读”。</p>
+<p>第 30 处还是“故事”。它查到的起始向量一样，加上的位置数字也一样，所以按上一篇的办法，“故事”的向量纹丝不动。</p>
+<p>可前面都从讲故事改成读故事了，它还像戴着耳机，什么也没听见。</p>
+<p>到了新工作场所，除了明白自己的岗位，还得了解跟自己有交集的同事。</p>
+<p>对 Token 来说，要“知其位，瞻前邻”：向量里除了位置信息，还得有周围 Token 的信息。</p>
+<p>能不能把前面几个词的向量拿过来，跟“故事”自己的一起算？</p>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 先取前面两个，各参考一半</h2>
+<p>先试个笨办法：取当前位置前面两个 Token 的向量，各参考一半，也就是求个平均，再加到当前位置的向量上。</p>
+<p>为什么只取两个？因为好算。先看前面换一个词，变化能不能传过来。</p>
+<p>为什么先往前看？因为以后想让电脑接着写，接着写时后面的文字还没写出来，手上只有已经写好的内容。</p>
+<p>所以这回先试试只用前面的词，能做到什么。</p>
+<ul class="bullet-list">
+<li>前面只有一个 Token，就直接加它。</li>
+<li>排在最前面的，就照抄自己。</li>
+</ul>
+<p>用“讲｜这个｜故事”算一次：</p>
+<ul class="bullet-list">
+<li>“讲”是 [2, 0]。</li>
+<li>“这个”是 [4, 0]。</li>
+<li>平均是 [3, 0]。</li>
+<li>“故事”原来 [1, 1]，加上邻居的 [3, 0]，得到 [4, 1]。</li>
+</ul>
+<figure class="tutorial-figure">
+<img alt="先把讲[2,0]和这个[4,0]求平均得[3,0]，再加回故事[1,1]，得到新结果[4,1]" class="zoomable" height="519" loading="lazy" src="../assets/images/img-09.webp" width="1100"/>
+<figcaption>先平均前两个，再加到“故事”身上，两步算清。</figcaption>
+</figure>
+<details class="collapse math-card">
+<summary><span class="math-tag">数学小卡片</span>“求平均”到底在求什么？</summary>
+<div class="collapse-content">
+<p>两个数各参考一半，就是把它俩加起来除以 2，得到的数正好在中间。向量求平均也一样，每一格分开算，再拼回一个向量。</p>
+<div id="meanLab"></div>
+</div>
+</details>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 换成“读”再试，新向量存哪</h2>
+<p>这回只换第 28 处：</p>
+<ul class="bullet-list">
+<li>“读”的向量是 [0, 2]。</li>
+<li>“这个”照旧 [4, 0]。</li>
+<li>平均是 [2, 1]。</li>
+<li>加到“故事”的 [1, 1] 上，得到 [3, 2]。</li>
+</ul>
+<p>邻词一换，“故事”就从 [4, 1] 变成了 [3, 2]。</p>
+<p>至于电脑能不能靠这些数分清“讲故事”和“读故事”，以后再摸索。</p>
+<figure class="tutorial-figure">
+<img alt="原句讲这个故事结果[4,1]与改词读这个故事结果[3,2]对照，故事自己输入没变，变的是邻居取来的数" class="zoomable" height="497" loading="lazy" src="../assets/images/img-10.webp" width="1100"/>
+<figcaption>只换一个词，“故事”的结果就不同；它自己没变，变的是邻居。</figcaption>
+</figure>
+<p>第 30 处算出的新向量，存到句子表 <span class="mi">X</span> 的第 30 行。</p>
+<p>第 13 处那个“故事”参考的是“封面”和“的”，算完存第 13 行。</p>
+<div class="tbl-switch" id="epxSwitch">
+<div class="tbl-tabs">
+<button class="tbl-tab active" data-i="0">起始向量表 <span class="mi">E</span></button>
+<button class="tbl-tab" data-i="1">位置表 <span class="mi">P</span></button>
+<button class="tbl-tab" data-i="2">句子表 <span class="mi">X</span></button>
+</div>
+<div class="tbl-panel active" data-i="0">
+<p class="tbl-row"><span class="tbl-k">存什么</span><span class="tbl-v">每个 Token 共用的起始向量</span></p>
+<p class="tbl-row"><span class="tbl-k">多少行</span><span class="tbl-v">27 行</span></p>
+</div>
+<div class="tbl-panel" data-i="1">
+<p class="tbl-row"><span class="tbl-k">存什么</span><span class="tbl-v">每个位置对应的位置向量</span></p>
+<p class="tbl-row"><span class="tbl-k">多少行</span><span class="tbl-v">31 行</span></p>
+</div>
+<div class="tbl-panel" data-i="2">
+<p class="tbl-row"><span class="tbl-k">存什么</span><span class="tbl-v">句中各位置当前的向量</span></p>
+<p class="tbl-row"><span class="tbl-k">多少行</span><span class="tbl-v">31 行</span></p>
+</div>
+</div>
+<p>上一篇从 <span class="mi">E</span> 查起始向量、从 <span class="mi">P</span> 查位置向量，相加得到 <span class="mi">X</span>。这次加进了前面词的线索，更新的是 <span class="mi">X</span>，<span class="mi">E</span> 和 <span class="mi">P</span> 照旧。</p>
+<div class="demo-card" data-chapter="04" data-station="2" id="talkReadDemo"></div>
+<div id="soft-3"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：前面两个 Token 的平均会更新当前位置，邻词变化能传进来。</p><p>下一篇接着看：研究怎么找到更远的线索。</p></div><nav class="nav-bar">
+<a href="chapter-03.html">← 第 3 篇</a>
+<a href="chapter-05.html">第 5 篇 →</a>
+</nav>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/math-interact.js?v=20261113w"></script>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '04';
+            renderMeanLab(document.getElementById('meanLab'));
+            bindTabSwitch(document.getElementById('epxSwitch'));
+            var totalStations = 3;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            DemoInteract.renderTalkRead(document.getElementById('talkReadDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

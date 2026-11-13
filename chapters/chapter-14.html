@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 14 篇：同一行里重新组合（FFN）</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 14 篇　同一行里重新组合：FFN</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>在平行世界里，我们已经把语文问题一步步变成算术：</p>
+<ul class="bullet-list">
+<li>拆 Token。</li>
+<li>配位置。</li>
+<li>用 QKV 找线索。</li>
+<li>残差加回。</li>
+</ul>
+<p>这一篇看光靠一条固定乘加，够不够用。</p>
+<figure class="tutorial-figure">
+<img alt="前情回顾：句子拆成小单元，语言规律藏在大量实例里" class="zoomable" height="619" loading="lazy" src="../assets/images/img-63.webp" width="1100"/>
+<figcaption>第 14 篇前情回顾。</figcaption>
+</figure>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>用 FFN 和 ReLU，处理“两条线索都满足”的判断。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 10–13 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 一条乘加，能算对四种情况吗</h2>
+<p>电脑要写“妈妈买的蓝封面书”，得说的是同一本书。</p>
+<p>先把两条线索分开：</p>
+<ul class="bullet-list">
+<li><span class="mi">a</span>：是不是妈妈买的。</li>
+<li><span class="mi">b</span>：是不是蓝封面。</li>
+</ul>
+<p>是就记 1，否则记 0。</p>
+<p>给它们各乘一个固定系数：</p>
+<ul class="bullet-list">
+<li><span class="mi">a</span> 的系数记作 <span class="mi">w<sub>a</sub></span>。</li>
+<li><span class="mi">b</span> 的系数记作 <span class="mi">w<sub>b</sub></span>。</li>
+</ul>
+<p>再把两项加起来。</p>
+<p>先把问题摆具体。电脑要判断“小明借出去的是妈妈买的那本蓝封面书”，就得同时确认两件事：</p>
+<ul class="bullet-list">
+<li>妈妈买的。</li>
+<li>蓝封面。</li>
+</ul>
+<p>我们拿原句做两组对照，只把买书人从爸爸换成妈妈，其余不动。</p>
+<p>两组对照的结果：</p>
+<ul class="bullet-list">
+<li>红封面：改前答 0，改后还答 0。</li>
+<li>蓝封面：改前答 0，改后答 1。</li>
+</ul>
+<p>下面这张图，就是这两组对照。</p>
+<figure class="tutorial-figure">
+<img alt="拿原句做两组对照，只把买书人从爸爸换成妈妈，其余不动" class="zoomable" height="550" loading="lazy" src="../assets/images/img-64.webp" width="1100"/>
+<figcaption>只改一处，做对照。</figcaption>
+</figure>
+<p>换买书人时，前后差恰好是 <span class="mi">w<sub>a</sub></span>。</p>
+<p>两组题目要求不一样：</p>
+<ul class="bullet-list">
+<li>红封面那组答案是 0，要求 <span class="mi">w<sub>a</sub></span>＝0。</li>
+<li>蓝封面那组答案是 1，要求 <span class="mi">w<sub>a</sub></span>＝1。</li>
+</ul>
+<p>一个数没法同时等于 0 和 1。</p>
+<p><span class="mi">a+b</span> 数的是对上几条：</p>
+<ul class="bullet-list">
+<li>对上 0 条或 1 条，答 0。</li>
+<li>对上 2 条，答 1。</li>
+</ul>
+<div class="demo-card" data-chapter="14" data-station="0" id="truthTableDemo"></div>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 怎么让只对一条的归零</h2>
+<p>想把 1 变 0、2 变 1，正好都减 1。</p>
+<p>可一条都没对上时，<span class="mi">0－1＝-1</span>，给出了负数。</p>
+<p>所以分两步：</p>
+<ul class="bullet-list">
+<li>先统一减 1。</li>
+<li>再把低于 0 的按 0 记。</li>
+</ul>
+<p>就像书店的一元折扣券：</p>
+<ul class="bullet-list">
+<li>买 2 元的东西，抵完付 1 元。</li>
+<li>只值 5 毛的东西，抵完付 0 元。</li>
+</ul>
+<p>店家不会倒找。</p>
+<p>这条规矩叫<strong>整流线性单元</strong>（ReLU）。</p>
+<p>它的规则是：</p>
+<ul class="bullet-list">
+<li>负数全压到 0。</li>
+<li>0 和正数原样保留。</li>
+</ul>
+<p>它在 0 处拐弯，不是一条直线。</p>
+<div class="demo-card" data-chapter="14" data-station="1" id="reluDemo"></div>
+<p>动手点完，再看静态图：不够的部分都会被压到 0。</p>
+<figure class="tutorial-figure">
+<img alt="买2元抵完付1元，只值5毛抵完付0，不够的归零" class="zoomable" height="550" loading="lazy" src="../assets/images/img-66.webp" width="1100"/>
+<figcaption>不够的，归到 0。</figcaption>
+</figure>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 只看第一问，能答第二问吗</h2>
+<p>第一问 <span class="mi">f</span> 算“两条都对上了吗”。第二问问“至少对上一条了吗”。</p>
+<p><span class="mi">f</span>＝0 时，有两种可能：</p>
+<ul class="bullet-list">
+<li>一条没对上。</li>
+<li>刚好对上一条。</li>
+</ul>
+<p>这两种情况要分别答 0 和 1。所以原来的 <span class="mi">a</span>、<span class="mi">b</span> 还得留下来。</p>
+<p>第一次乘加，算出 <span class="mi">a</span>、<span class="mi">b</span>、<span class="mi">a+b−1</span>。</p>
+<p>逐格过 ReLU 后，留下 <span class="mi">a</span>、<span class="mi">b</span>、<span class="mi">f</span>。其中：</p>
+<div class="formula"><span class="mi">f</span> = ReLU(<span class="mi">a+b−1</span>)</div>
+<p>第二次乘加：</p>
+<ul class="bullet-list">
+<li>用 <span class="mi">f</span> 答第一问。</li>
+<li>用 <span class="mi">a+b−f</span> 答第二问。</li>
+</ul>
+<p>为什么 <span class="mi">a+b−f</span> 能答第二问？看三种情况：</p>
+<ul class="bullet-list">
+<li>两条都满足：<span class="mi">2−1＝1</span>。</li>
+<li>只满足一条：<span class="mi">1−0＝1</span>。</li>
+<li>都不满足：<span class="mi">0−0＝0</span>。</li>
+</ul>
+<p>这正好是第二问要的数。</p>
+<p>如果拿掉中间的 ReLU，两次乘加就能合成一次。第一问又会卡在老问题上。</p>
+<figure class="tutorial-figure">
+<img alt="第一问答f=0时可能没对上也可能刚好对上一条，第二问在这两种情况下不同" class="zoomable" height="578" loading="lazy" src="../assets/images/img-68.webp" width="1100"/>
+<figcaption>光看一个数，分不出。</figcaption>
+</figure>
+<div id="soft-3"></div>
+</section>
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 回到整句：这就是 FFN</h2>
+<p>拿“书”更新好的四格做输入，安排两次乘加，算一组增量。</p>
+<p>第一次：</p>
+<ul class="bullet-list">
+<li>得到一组中间数。</li>
+<li>数量可以比原来多。</li>
+<li>每个中间数单独过 ReLU。</li>
+</ul>
+<p>第二次：</p>
+<ul class="bullet-list">
+<li>乘加算出四个改变量。</li>
+<li>跟四格一一对应。</li>
+</ul>
+<p>这套接法叫<strong>前馈网络</strong>（FFN）。</p>
+<p>31 个位置各算自己那一行，共用同一套系数和偏置。</p>
+<ul class="bullet-list">
+<li><span class="mi">W<sub>1</sub></span>、<span class="mi">W<sub>2</sub></span>：两次乘加的系数矩阵。</li>
+<li><span class="mi">b<sub>1</sub></span>、<span class="mi">b<sub>2</sub></span>：偏置。</li>
+</ul>
+<p>照上一篇的办法，FFN 算出的改变量再逐格加回它收到的那一行。加完仍四格，交给下一轮。</p>
+<div class="formula">
+            FFN(<span class="mi">h<sub>i</sub></span>) = ReLU(<span class="mi">h<sub>i</sub>W<sub>1</sub></span> + <span class="mi">b<sub>1</sub></span>)<span class="mi">W<sub>2</sub></span> + <span class="mi">b<sub>2</sub></span>
+</div>
+<figure class="tutorial-figure">
+<img alt="整句31个位置各算自己那一行，共用同一套系数和偏置" class="zoomable" height="435" loading="lazy" src="../assets/images/img-69.webp" width="1100"/>
+<figcaption>各算各的，系数共用。</figcaption>
+</figure>
+<p>第一张图先看每一行怎么算。再把它放回整个编码器：</p>
+<ul class="bullet-list">
+<li>注意力先加回一次。</li>
+<li>接着轮到 FFN。</li>
+<li>FFN 算完，再把改变量加回这一行。</li>
+</ul>
+<figure class="tutorial-figure">
+<img alt="照第13篇办法，先把注意力查回的数加进这一行，再算FFN" class="zoomable" height="636" loading="lazy" src="../assets/images/img-70.webp" width="1100"/>
+<figcaption>FFN 算完，照样加回。</figcaption>
+</figure>
+<p>图先把位置关系摆清楚。下面再用分步演示，把整条编码器流程走一遍。</p>
+<div class="demo-card" data-chapter="14" data-station="3" id="encoderFlowDemo"></div>
+<div id="soft-4"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：带 ReLU 的 FFN，能先算中间判断再输出改变量。</p><p>下一篇接着看：处理数值尺度越滚越大的问题。</p></div><nav class="nav-bar">
+<a href="chapter-13.html">← 第 13 篇</a>
+<a href="chapter-15.html">第 15 篇 →</a>
+</nav>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/circuit-board.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '14';
+            var totalStations = 4;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            CircuitBoard.renderReLU(document.getElementById('reluDemo'));
+            StepInteract.renderTruthTable(document.getElementById('truthTableDemo'));
+            StepInteract.renderEncoderFlow(document.getElementById('encoderFlowDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

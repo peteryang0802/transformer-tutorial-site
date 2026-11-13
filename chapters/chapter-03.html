@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 3 篇：让位置也参与计算</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 3 篇　让“站在哪儿”也参与计算</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前两篇我们把长句拆成 31 个 Token，去重后词表有 27 个，也给它们配了起始向量。句中每个位置按编号取数、分别保存，电脑里有了 31 行能算的数字。</p>
+<p>可起始向量只跟 Token 有关。比如“我爱你”和“你爱我”，同一个“我”站在句首还是句尾，查到的都一样，两句话的意思却反了。</p>
+<p>这一篇琢磨怎么让“站在哪儿”也参与计算。</p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>加入位置信息，让同一个 Token 站在不同位置时数字不一样。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 7–9 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 只换两个人，谁借书就反过来</h2>
+<p>只把第 3 处“小明”和第 20 处“妹妹”对调，其他 Token 不动。</p>
+<p>借书的部分，就从“小明把书借给妹妹”变成“妹妹把书借给小明”。借出的人和收书的人，反过来了。</p>
+<p>按上一篇的约定，起始向量只跟 Token 有关。所以两句话里“小明”查到的都是 [1, 0]，“妹妹”都是 [1, 2]。人换了位置，数字却没变。</p>
+<p>把这些向量加起来也解决不了，因为 <span class="mi">a+b＝b+a</span>，只看总和看不出谁在前谁在后。就像只报“这屋里有小明、有妹妹”，没说谁坐主位。那就试试给每个位置也配一组数，再跟起始向量合起来。</p>
+<figure class="tutorial-figure">
+<img alt="小明[1,0]加妹妹[1,2]与交换后妹妹加小明，总和都是[2,2]，求和看不出谁在前" class="zoomable" height="439" loading="lazy" src="../assets/images/img-07.webp" width="1100"/>
+<figcaption>顺序反过来总和仍一样，它只记住“有谁”，没留下“谁在前”。</figcaption>
+</figure>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. Token 的数和位置的数，怎么合</h2>
+<p>起始向量有两格，位置也用两格。</p>
+<p>先给第 3 处配 [0, 0]，第 20 处配 [0, 1]，用这两组简单的数，看能不能把两个位置区分开。</p>
+<p class="tip-text">这里先用最简单的教学位置向量，目的是让位置能参与计算；它不是论文里的正弦余弦位置编码。</p>
+<p>最直白的办法，是把两组数<strong>接起来</strong>：两份都留下，可两格变成四格。后面每步都得多处理两格，计算量大增。</p>
+<p>能不能先不增加格数？</p>
+<p>试试把对应数字<strong>相加</strong>：仍是两格，两组数都参加了计算。可只看相加结果，不一定能把原来两组分别拆回来，因为 <span class="mi">a+b＝c</span> 简单，反过来由 c 推 a 和 b 很难。</p>
+<p>拼接还是相加，先沿相加这条路走，拿结果看管不管用。</p>
+<p>位置数字像座位牌，留在座位上。</p>
+<ul class="bullet-list">
+<li>谁到第 3 处，就用 [0, 0]。</li>
+<li>谁到第 20 处，就用 [0, 1]。</li>
+</ul>
+<p>人换了座位，总不能还抱着原来的座位牌。</p>
+<div class="demo-card" data-chapter="03" data-station="1" id="combineSwitchDemo"></div>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 数字跟着变了，这叫位置编码</h2>
+<p>以“妹妹”为例，她的起始向量仍是 [1, 2]。</p>
+<ul class="bullet-list">
+<li>在第 20 处，加上位置向量 [0, 1]，算出 [1, 3]。</li>
+<li>换到第 3 处，加上位置向量 [0, 0]，算出 [1, 2]。</li>
+</ul>
+<p>人还是那个人，这次坐哪儿，数字里终于有了区别。</p>
+<p>给每个位置配一组数、让位置也能参与计算，这个办法叫<strong>位置编码</strong>。把 31 个位置的向量按位置号排成表，记作 <span class="mi">P</span>。下面点一点，跟着三步把一个位置的数算出来。</p>
+<div class="demo-card" data-chapter="03" data-station="2" id="positionCodeDemo"></div>
+<p>31 处都照这三步算一遍，按顺序排好，新矩阵记作 <span class="mi">X</span>，有 <span class="mi">n</span> 行、<span class="mi">d</span> 列。到这里还不能说电脑读懂了“谁把书借给谁”，但至少“这次站在哪儿”这个消息，有办法送进计算了。</p>
+<div id="soft-3"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：加入位置后的 <span class="mi">X</span>，同一个 Token 在不同位置会有不同数字。</p><p>下一篇接着看：让周围 Token 的变化也能传过来。</p></div><nav class="nav-bar">
+<a href="chapter-02.html">← 第 2 篇</a>
+<a href="chapter-04.html">第 4 篇 →</a>
+</nav>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '03';
+            var totalStations = 3;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            DemoInteract.renderCombineSwitch(document.getElementById('combineSwitchDemo'));
+            StepInteract.renderPositionCode(document.getElementById('positionCodeDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 7 篇：把分数变成比例（softmax）</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 7 篇　把分数变成取用比例：softmax</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>我们把长句拆成 31 个 Token、配向量、加位置，电脑处理一个 Token 时能在整句话里找线索。上一篇用查询 <span class="mi">Q</span> 点积算出了匹配分。这一篇要解决：怎么把这些分数变成取用比例。</p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>用 softmax 把匹配分转成总和为 1 的取用比例。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 10–13 分钟</p></div>
+<p>先看一张宝宝照片。同一个问题关注点不同，取用的地方也会不同。</p>
+<figure class="tutorial-figure">
+<img alt="同一张宝宝照片，想知道眼睛颜色时圈出眼睛、想知道有没有笑时圈出嘴，查询不同关注位置不同" class="zoomable" height="550" loading="lazy" src="../assets/images/img-20.webp" width="1100"/>
+<figcaption>照片没换，问题不同，关注的地方就不一样。</figcaption>
+</figure>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 每个数除以总和，行不行</h2>
+<p>合理的配方比例，要符合三条：</p>
+<ul class="bullet-list">
+<li>不能是负数，负数比例没意义。</li>
+<li>所有比例加起来，得是 1。</li>
+<li>哪份得分高，就多参考一点。</li>
+</ul>
+<p>拿 4 和 0 试：总和是 4，各自除以 4，得到 1 和 0。“妹妹”占 100%，看似还行。</p>
+<p>可点积有时会算出负数。比如 -1 和 2，总和是 1，除完还是 -1 和 2。一份资料怎么能占 -100%？</p>
+<p>再比如 -1 和 1，总和是 0，连除都没法除。</p>
+<p>那就换思路：先把每个分数变成正数，再除以总和，这样总和一定为正，而且原来得分高的，变完还得排在前面。</p>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 让所有数先变正，顺序照旧</h2>
+<p>试试平方？-3 原来比 -1 小，平方后变成 9 和 1，高低顺序反了。</p>
+<p>再试试取指数：<span class="mi">e</span> 的任何次方都大于 0，而且分数越高，取指数的结果越大。</p>
+<p>算出指数后，再各自除以总和，这条路看起来可行。</p>
+<details class="collapse math-card">
+<summary><span class="math-tag">数学小卡片</span>e 是什么？为什么取它的次方？</summary>
+<div class="collapse-content">
+<p><span class="mi">e</span> 是一个固定的数，约等于 2.718。我们用到的是它的“次方” <span class="mi">e<sup>x</sup></span>。它有两个好处：一是不管 <span class="mi">x</span> 是正还是负，<span class="mi">e<sup>x</sup></span> 都大于 0，负数分数也能变成正数；二是 <span class="mi">x</span> 越大，<span class="mi">e<sup>x</sup></span> 越大，原来的高低顺序不会乱。</p>
+<div id="expLab"></div>
+</div>
+</details>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 算 4 和 0，再给它起名字</h2>
+<p>先取指数：</p>
+<ul class="bullet-list">
+<li><span class="mi">e<sup>4</sup></span>≈54.6。</li>
+<li><span class="mi">e<sup>0</sup></span>＝1。</li>
+<li>总和约 55.6。</li>
+</ul>
+<p>各自除以总和：</p>
+<ul class="bullet-list">
+<li>“妹妹”约 98.2%。</li>
+<li>“封面”约 1.8%。</li>
+</ul>
+<p>大于 0、总和为 1、顺序不变，三条都通过。</p>
+<p>比起直接除得 100%，这种“先指数、再除以总和”的比例柔和很多，会随分数缓缓变化，同时仍让最高分拿最大份额。</p>
+<p>这算法叫 <strong>softmax</strong>。</p>
+<div class="formula">
+            softmax(<span class="mi">x<sub>i</sub></span>) = <span class="mi">e<sup>x<sub>i</sub></sup></span> ⁄ <span class="mi">Σ<sub>j</sub>e<sup>x<sub>j</sub></sup></span>
+</div>
+<div class="demo-card" data-chapter="07" data-station="2" id="softmaxChainDemo"></div>
+<p class="tip-text">课堂示例数值：这里的 4 和 0，是为了看清计算链单独设的。</p>
+<p>代进向量：</p>
+<ul class="bullet-list">
+<li>“妹妹” [4, 0] 乘 0.982，得 [3.928, 0]。</li>
+<li>“封面” [0, 4] 乘 0.018，得 [0, 0.072]。</li>
+<li>加起来，是 [3.928, 0.072]。</li>
+</ul>
+<p>这是第 23 处“她”查回来的，先另存，原来的输入照旧。换成“蓝色”来查，两格数字正好对调。</p>
+<p>这套按需取资料的办法，就叫<strong>“注意力”</strong>，各位置分到的比例叫<strong>注意力权重</strong>（attention weights）。真让“她”查整句，就把 31 个匹配分一起送进 softmax，轮到下一个 Token 再另算一份。</p>
+<div class="demo-card" data-chapter="07" data-station="2" id="attentionStageDemo"></div>
+<div id="soft-3"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：softmax 算出的取用比例，以及按比例取回的向量。</p><p>下一篇接着看：用三道题检验这套打分是否可靠。</p></div><nav class="nav-bar">
+<a href="chapter-06.html">← 第 6 篇</a>
+<a href="chapter-08.html">第 8 篇 →</a>
+</nav>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/math-interact.js?v=20261113w"></script>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/attention-stage.js?v=20261113w"></script>
+<script src="../js/sound-mix.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '07';
+            renderExpLab(document.getElementById('expLab'));
+            var totalStations = 3;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            renderAttentionStage(document.getElementById('attentionStageDemo'));
+            StepInteract.renderSoftmaxChain(document.getElementById('softmaxChainDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

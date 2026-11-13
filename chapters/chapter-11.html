@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 11 篇：分数差太多，怎么稳住（缩放）</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 11 篇　分数差太多，怎么稳住：缩放</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一篇电脑从 81 个候选里筛出一张 <span class="mi">W<sub>K</sub></span>，五道题都过。可那五道题只检查谁的分数更高，没管差多少。这一篇研究哪些因素会影响取回比例。</p>
+<div id="recapTokenStrip"></div>
+<p>先看原句的位置。再用下面这张图，看比例偏一点会带来多大差别。</p>
+<figure class="tutorial-figure">
+<img alt="眼睛占99%时肤色只混进一点，占51%时就明显，比例不同结果不同" class="zoomable" height="733" loading="lazy" src="../assets/images/img-42.webp" width="1100"/>
+<figcaption>比例偏一点，结果差很多。</figcaption>
+</figure>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>看分数差距和格数怎样影响比例，并引入缩放。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 12–16 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 系数不同，比例怎么变</h2>
+<p>两种配比都符合“借给取更多”：</p>
+<ul class="bullet-list">
+<li>“借给”取 51%，“妹妹”取 49%。</li>
+<li>“借给”取 99%，“妹妹”取 1%。</li>
+</ul>
+<p>但合出来的资料差很多。</p>
+<ul class="bullet-list">
+<li>取用比例 99%：就像照片里几乎全是眼睛，只混进一丝肤色。</li>
+<li>取用比例 51%：就有接近一半是脸颊的颜色，结果会被带偏。</li>
+</ul>
+<p>只知道谁多不够。各取多少，也很要紧。</p>
+<p>把上一篇的 <span class="mi">W<sub>K</sub></span> 整体乘 10，再算 <span class="mi">K</span>。</p>
+<p>结果有两点：</p>
+<ul class="bullet-list">
+<li>“借给”仍排第一。</li>
+<li>领先从 1 分变成 10 分。</li>
+</ul>
+<p>交给 softmax 后，几乎全用“借给”，“妹妹”分不到了。</p>
+<p>原来七成茶三成奶，现在几乎全茶。名次一样，配比大变。</p>
+<p>分数相差多少会影响配比。不过线索真集中时，多取也合理。我们要研究的是：哪些影响必须消除。</p>
+<div class="demo-card" data-chapter="11" data-station="0" id="scale10Demo"></div>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 格数增加，取用会更偏</h2>
+<p>前面都用两格，方便手算。实际可能要 8 格、128 格。</p>
+<p>设计一个试验：</p>
+<ul class="bullet-list">
+<li>一个 <span class="mi">Q</span>，两个 <span class="mi">K</span>。</li>
+<li>每格只取 -1、0、1。</li>
+<li>让电脑做两万回。</li>
+<li>看某一处拿走超过 95% 的“几乎全用一处”出现多少次。</li>
+</ul>
+<p class="tip-text">这是为了观察格数影响的思想实验，不是模型训练。</p>
+<p>从 2 格加到 8 格、128 格，“几乎全用一处”越来越频繁。</p>
+<p>这里有两个条件：</p>
+<ul class="bullet-list">
+<li>每格始终只取 -1、0、1。</li>
+<li>没有增加任何语言线索。</li>
+</ul>
+<p>变的只是格数，配比却更容易偏。</p>
+<p>格数本身没告诉电脑哪份更值得取，却影响了配方。这件事必须摆平。</p>
+<div class="demo-card" data-chapter="11" data-station="1" id="gridStatDemo"></div>
+<div id="soft-2"></div>
+<p class="pause-point">这里可以先歇一下，下次从这一站接着读。</p></section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 缩小差距，再跑通 31 个位置</h2>
+<p>把匹配分都除以同一个大于 1 的数。顺序不变，差距缩小。</p>
+<p>统计分差起伏：</p>
+<ul class="bullet-list">
+<li>2 格到 8 格：格数变 4 倍，起伏约 2 倍。</li>
+<li>2 格到 128 格：格数变 64 倍，起伏约 8 倍。</li>
+</ul>
+<p>注意：</p>
+<ul class="bullet-list">
+<li>2 正好是 4 的平方根。</li>
+<li>8 正好是 64 的平方根。</li>
+</ul>
+<p>起伏跟着格数的平方根涨。</p>
+<p>把格数记作 <span class="mi">d</span>，<span class="mi">d</span> 就是 <span class="mi">Q</span>、<span class="mi">K</span> 共用的那几格。</p>
+<p>让每个匹配分除以 <span class="mi">√d</span>，正好把多出来的起伏抵消。这一步叫<strong>缩放</strong>。</p>
+<p>拿 128 格那两万回对照，缩放后“全用一处”明显减少。</p>
+<p>回到 31 个位置，完整流程是：</p>
+<ul class="bullet-list">
+<li><span class="mi">Q</span> 跟 <span class="mi">K</span> 点积。</li>
+<li>缩放。</li>
+<li>softmax 算比例。</li>
+<li>混合 <span class="mi">V</span>。</li>
+</ul>
+<p>结果存进矩阵 <span class="mi">Z</span>。谁发起查询，结果就放在 <span class="mi">Z</span> 对应那一行。</p>
+<details class="collapse math-card">
+<summary><span class="math-tag">数学小卡片</span>平方根是什么？为什么除它？</summary>
+<div class="collapse-content">
+<p>一个数的平方根，就是自己乘自己能得到它的那个数。</p>
+<p>比如：</p>
+<ul class="bullet-list">
+<li>2×2＝4，所以 <span class="mi">√4＝2</span>。</li>
+<li>3×3＝9，所以 <span class="mi">√9＝3</span>。</li>
+</ul>
+<p>缩放时，让匹配分除以格数 <span class="mi">d</span> 的平方根。格数越多，除得越多。这样正好把“格数多就容易偏”的影响压下去。</p>
+<div id="sqrtLab"></div>
+</div>
+</details>
+<div class="demo-card" data-chapter="11" data-station="2" id="spotlightScaleDemo"></div>
+<p class="tip-text">课堂示例数值：这里用两组分数，单独演示缩放前后的比例变化。</p>
+<p class="tip-text">百分比按四舍五入显示，所以有时合计会是 101%；精确比例加起来仍是 100%。</p>
+<div class="formula">
+            缩放后的分 = <span class="mi">QK<sup>T</sup></span> ⁄ <span class="mi">√d</span>
+</div>
+<div class="demo-card" data-chapter="11" data-station="2" id="spreadScaleDemo"></div>
+<p>聚光灯先看缩放前后的比例。最后再把完整四步从头到尾走一遍。</p>
+<div class="demo-card" data-chapter="11" data-station="2" id="fourStepsDemo"></div>
+<div id="soft-3"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：缩放后的完整注意力链路，格数带来的额外起伏被压下去。</p><p>下一篇接着看：分成两个注意力头，保留不同查找结果。</p></div><nav class="nav-bar">
+<a href="chapter-10.html">← 第 10 篇</a>
+<a href="chapter-12.html">第 12 篇 →</a>
+</nav>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/math-interact.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/spotlight-scale.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script src="../js/sentence-data.js?v=20261113w"></script>
+<script src="../js/token-strip.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '11';
+            renderSqrtLab(document.getElementById('sqrtLab'));
+            TokenStrip.render(document.getElementById('recapTokenStrip'), {
+                title: '原句的 31 个 Token 位置',
+                showNumbers: true
+            });
+            var totalStations = 3;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            renderSpotlightScale(document.getElementById('spotlightScaleDemo'));
+            StepInteract.renderScale10(document.getElementById('scale10Demo'));
+            StepInteract.renderFourSteps(document.getElementById('fourStepsDemo'));
+            StepInteract.renderGridStat(document.getElementById('gridStatDemo'));
+            StepInteract.renderSpreadScale(document.getElementById('spreadScaleDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

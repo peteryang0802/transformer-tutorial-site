@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 8 篇：分开“我查”和“被查”（Key）</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 8 篇　分开“我查”和“被查”：Key</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前 7 篇我们把长句拆成 31 个 Token，起始向量加位置向量，得到句子表 <span class="mi">X</span>。又用 <span class="mi">Q</span> 点积打分、softmax 换比例、合成资料。</p>
+<p>可换几个人来查，这套打分还管用吗？这一篇拿借书这件事出三道题，一起验一验。</p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>用三道互查题，暴露正反查同分时的矛盾。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 10–12 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 三道题，分别想找什么</h2>
+<p>轮流站在“小明”“借给”“妹妹”三个位置各问一次：</p>
+<ul class="bullet-list">
+<li>小明做了什么？</li>
+<li>书借给了谁？</li>
+<li>谁把书借给妹妹？</li>
+</ul>
+<p>每次只在另外两个位置里比。希望的那一处分数要更高，打平不算过。</p>
+<p class="tip-text">前面先拿同一个向量讲分数，这一篇专门把“我查”和“被查”拆开。</p>
+<div class="tbl-switch" id="threeQSwitch">
+<div class="tbl-tabs">
+<button class="tbl-tab active" data-i="0">小明</button>
+<button class="tbl-tab" data-i="1">借给</button>
+<button class="tbl-tab" data-i="2">妹妹</button>
+</div>
+<div class="tbl-panel active" data-i="0">
+<p class="tbl-row"><span class="tbl-k">想弄清</span><span class="tbl-v">他做了什么</span></p>
+<p class="tbl-row"><span class="tbl-k">希望谁前</span><span class="tbl-v">借给 ＞ 妹妹</span></p>
+</div>
+<div class="tbl-panel" data-i="1">
+<p class="tbl-row"><span class="tbl-k">想弄清</span><span class="tbl-v">书借给谁</span></p>
+<p class="tbl-row"><span class="tbl-k">希望谁前</span><span class="tbl-v">妹妹 ＞ 小明</span></p>
+</div>
+<div class="tbl-panel" data-i="2">
+<p class="tbl-row"><span class="tbl-k">想弄清</span><span class="tbl-v">谁借给她</span></p>
+<p class="tbl-row"><span class="tbl-k">希望谁前</span><span class="tbl-v">小明 ＞ 借给</span></p>
+</div>
+</div>
+<p>用 <span class="mi">Q</span> 点积检查：</p>
+<ul class="bullet-list">
+<li>小明的 <span class="mi">Q</span> 是 [1,0]，借给 0、妹妹 -1，过。</li>
+<li>借给的 <span class="mi">Q</span> 是 [0,1]，妹妹 -1、小明 0，没过。</li>
+<li>妹妹的 <span class="mi">Q</span> 是 [-1,-1]，两边都 -1，打平，没过。</li>
+</ul>
+<p>三道题，只过了一道。</p>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 正查反查，为什么同分</h2>
+<p>“小明”查“借给”，和“借给”查“小明”，用的还是那两组数，只是换了相乘顺序，每格乘积没变，加起来当然同分。</p>
+<p>把三个互查分数记成 <span class="mi">A</span>、<span class="mi">B</span>、<span class="mi">C</span>：</p>
+<ul class="bullet-list">
+<li>第 1 题要 <span class="mi">A＞C</span>。</li>
+<li>第 3 题要 <span class="mi">C＞B</span>。</li>
+<li>第 2 题要 <span class="mi">B＞A</span>。</li>
+</ul>
+<p>连起来，成了 <span class="mi">A＞C＞B＞A</span>，<span class="mi">A</span> 得比自己还大，电脑算不出这样的数。</p>
+<p>根因就是正查反查共用一个分数。换一组数、多加几格，都没用。</p>
+<figure class="tutorial-figure">
+<img alt="小明借给妹妹三角互查，三个共同结果A、B、C连起来要求A大于C大于B大于A，绕一圈A比自己还大，不可能" class="zoomable" height="534" loading="lazy" src="../assets/images/img-23.webp" width="1100"/>
+<figcaption>三条要求连起来，竟要 A 比自己还大，三个分数没法同时成立。</figcaption>
+</figure>
+<p>要让“谁查谁”的方向在计算里有个说法。还记得宝宝照片吗：一个告诉我们想找什么，一个帮我们认出要找的地方。那就给这两件事，各用一组数。</p>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 先分开“我查”和“被查”</h2>
+<p>“我去查”时，还是拿当前位置的输入向量当查询 <span class="mi">Q</span>。</p>
+<p>“别人来查我”时，从同一个输入另算一组数，专门拿来跟对方的 <span class="mi">Q</span> 比。这组数叫<strong>键向量</strong>（Key，记作 <span class="mi">K</span>）。</p>
+<p>“小明”查“借给”，用小明的 <span class="mi">Q</span> 和借给的 <span class="mi">K</span>。反过来“借给”查“小明”，用借给的 <span class="mi">Q</span> 和小明的 <span class="mi">K</span>。</p>
+<p>两次都是点积，可拿去相乘的是两套搭配，分数就有机会不一样了。</p>
+<p><span class="mi">K</span> 该怎么算？先拿刚才没过的第二题试。</p>
+<div class="demo-card" data-chapter="08" data-station="2" id="queryKeyDemo"></div>
+<p>动手试完，再看静态图：第二题里，小明的分数确实排在妹妹前面。</p>
+<figure class="tutorial-figure">
+<img alt="借给的Q[0,1]点积就是对方第二格，小明0分妹妹-1分，小明排前面" class="zoomable" height="688" loading="lazy" src="../assets/images/img-24.webp" width="1100"/>
+<figcaption>第二题要过，妹妹箭头终点得比小明高。</figcaption>
+</figure>
+<div id="soft-3"></div>
+</section>
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 只转拿来匹配的箭头</h2>
+<p>“借给”的 <span class="mi">Q</span> 是 [0,1]，点积结果就是对方第二格：小明 0、妹妹 -1，难怪小明排前。</p>
+<p>要让妹妹反超，就让她箭头终点变高。<span class="mi">Q</span> 留在原地，只把“小明”“妹妹”拿来匹配的箭头，转同一个角度，长度不变。</p>
+<p>小明顺时针转 90° 朝下，第二格变 -1；妹妹转到左上，第二格变 1。</p>
+<p>写成数字：<span class="mi">[a, b] → K＝[b, -a]</span>。</p>
+<p>三个位置都按这条规则算，三道题竟然全过。</p>
+<p>这套拿自己 <span class="mi">Q</span> 跟对方 <span class="mi">K</span> 点积的办法，叫 <strong>QK 点积匹配法</strong>。正查反查，终于能打出不同的分。</p>
+<p>不过这规则是写死的，过了眼前三道题，换组要求还灵不灵？先打个问号。</p>
+<div class="demo-card" data-chapter="08" data-station="3" id="arrowRotateDemo"></div>
+<div id="soft-4"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：正反查同分会造成 A&gt;C&gt;B&gt;A 的死结。</p><p>下一篇接着看：分开“我去查”和“别人来查我”。</p></div><nav class="nav-bar">
+<a href="chapter-07.html">← 第 7 篇</a>
+<a href="chapter-09.html">第 9 篇 →</a>
+</nav>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '08';
+            var totalStations = 4;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            bindTabSwitch(document.getElementById('threeQSwitch'));
+            DemoInteract.renderQueryKey(document.getElementById('queryKeyDemo'));
+            StepInteract.renderArrowRotate(document.getElementById('arrowRotateDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

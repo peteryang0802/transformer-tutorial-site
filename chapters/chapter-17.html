@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 17 篇：回答时回查原句（交叉注意力）</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 17 篇　回答时回查原句：交叉注意力</h1>
+<!-- 前情回顾 -->
+<div class="recap-card">
+<p class="recap-label">前情回顾</p>
+<ul class="recap-list">
+<li>长句拆成 31 个 Token，每个位置配了向量、记了位置。</li>
+<li>靠注意力取线索、FFN 加工，加回、归一化，读原句的编码器已经搭好。</li>
+<li>上一篇用因果掩码挡住了后文。</li>
+</ul>
+<p class="recap-next">这一篇要解决：回答对不对，得回原句确认。</p>
+<figure class="tutorial-figure">
+<img alt="前情回顾：拆成31个Token，每个位置配一行数、记进位置" class="zoomable" height="733" loading="lazy" src="../assets/images/img-81.webp" width="1100"/>
+<figcaption>第 17 篇前情回顾。</figcaption>
+</figure>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>用交叉注意力，让回答带着问题回查原句。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 12–16 分钟</p></div>
+<p class="tip-text">先记住角色：</p>
+<ul class="bullet-list">
+<li><span class="mi">Q</span> 来自回答。</li>
+<li><span class="mi">K</span> 和 <span class="mi">V</span> 来自原句。</li>
+</ul>
+<div id="stationProgress"></div>
+<p>先把原句的 31 个位置放在这儿，后面每一站都可以回头对照。</p>
+<!-- 整章锚点：原句 31 个 Token -->
+<div id="topTokenStrip"></div>
+<!-- ===== 第 1 站 ===== -->
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 写回答前，为什么得先回头看</h2>
+<p>先看这张图。</p>
+<p>同样一句“宝宝的眼睛是……”，配蓝眼睛、棕眼睛两张照片，答案就不一样。</p>
+<p>把照片盖住，光看半句话，判断不了。</p>
+<figure class="tutorial-figure">
+<img alt="同一个开头配两张不同照片，盖住照片判断不了，文字靠QKV回头查照片" loading="lazy" src="../assets/images/baby-qkv.webp"/>
+<figcaption>同一个开头，答案得看照片；文字靠 <span class="mi">Q</span> 发问、<span class="mi">K</span> 比对、<span class="mi">V</span> 取回。</figcaption>
+</figure>
+<p>回到接龙也一样。</p>
+<p>给“书｜借给｜了”后面接什么，不能光盯着这几个字，得回原句里找。</p>
+<p>点一下按钮，看原句人物对调后，正确答案怎么变。</p>
+<div class="demo-card">
+<button class="run-btn" id="s0Toggle">对调原句里的人物</button>
+<div class="result-box" id="s0View" style="display:block;"></div>
+</div>
+<p>点完对调，再看静态图：资料一变，正确答案也跟着变。</p>
+<figure class="tutorial-figure">
+<img alt="换一张瞳色不同的照片，开头照旧、正确答案变了，写答案前得先看照片" class="zoomable" height="733" loading="lazy" src="../assets/images/img-82.webp" width="1100"/>
+<figcaption>资料变了，答案也变。</figcaption>
+</figure>
+</section>
+<!-- ===== 第 2 站 ===== -->
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 原句偷偷改了，电脑为什么会答错</h2>
+<p>我们来两回接龙，回答开头都是“书｜借给｜了”。</p>
+<p>第二回，在电脑回答前，偷偷把原句里的“小明”“妹妹”对调。</p>
+<p>可这时候原句还没接进计算。到现在为止，回答这边的电路，根本没接原句这根线。</p>
+<p>电脑给候选词算的分，两回一模一样。</p>
+<div id="s1Guess"></div>
+<p>它根本不知道原句变了，照旧把“妹妹”排第一。</p>
+<p>可这回收书的是小明，这就答错了。</p>
+<p>所以得让回答在给答案前，真的去查一次原句。</p>
+</section>
+<!-- ===== 第 3 站 ===== -->
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 怎样带着问题，回原句找线索</h2>
+<p>办法是让回答这一行用自己的数算出 <span class="mi">Q</span>，再拿 <span class="mi">Q</span> 去原句里查。</p>
+<ul class="bullet-list">
+<li>跟原句各行的 <span class="mi">K</span> 打匹配分。</li>
+<li>用 softmax 算比例。</li>
+<li>按比例把各行的 <span class="mi">V</span> 取回来。</li>
+</ul>
+<p>角色分清楚：</p>
+<ul class="bullet-list">
+<li>发问的 <span class="mi">Q</span> 来自回答。</li>
+<li>供比对的 <span class="mi">K</span> 和供取用的 <span class="mi">V</span> 来自原句。</li>
+</ul>
+<p>这种从一份文字发问、到另一份文字里找线索的办法，叫<strong>交叉注意力</strong>。</p>
+<p>别和第 12 篇的多头搞混：</p>
+<ul class="bullet-list">
+<li>多头：同一份资料分几路看。</li>
+<li>交叉注意力：换一份资料，到那边去看。</li>
+</ul>
+<div id="s2Guess"></div>
+<p>先猜一猜它会怎么回查。再打开下面的演示，亲手走一遍。</p>
+<div class="demo-card">
+<h3>动手回查一次</h3>
+<p class="tip-text">“了”带着问题，在原句的小明、借给、妹妹三个人里找。看谁的匹配分高，就多取谁。</p>
+<!-- 高亮三个位置的原句 token 条 -->
+<div id="s2TokenStrip"></div>
+<!-- 发问方 -->
+<div class="asker-card">
+<span class="asker-tag">发问</span>
+<span>回答写到“了”，带着问题 <span class="mi">Q</span> 回原句</span>
+</div>
+<!-- 结果区：三个人的匹配分和权重条 -->
+<div class="recall-result" id="recallResult"></div>
+<!-- 主操作按钮 -->
+<button class="run-btn" id="recallMainBtn">开始回查</button>
+<p class="tip-text" id="statusText">点上面按钮开始。</p>
+<!-- 抽象坐标折叠深究 -->
+<details class="collapse" id="coordCollapse" style="display:none;">
+<summary>深究：这三行的原始向量坐标</summary>
+<div class="collapse-content">
+<div id="coordRows"></div>
+</div>
+</details>
+</div>
+<p>动手回查以后，再看静态图：“了”就是这样带着问题回到原句。</p>
+<figure class="tutorial-figure">
+<img alt="跟着第4行「了」走，它用自己这一行的Q回头查原句31处" class="zoomable" height="619" loading="lazy" src="../assets/images/img-83.webp" width="1100"/>
+<figcaption>带着问题，回头查。</figcaption>
+</figure>
+<p class="pause-point">这里可以先歇一下，下次从这一站接着读。</p></section>
+<!-- ===== 第 4 站 ===== -->
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 换人后，变化真的传到回答了吗</h2>
+<p class="tip-text">再固定一次角色：</p>
+<ul class="bullet-list">
+<li><span class="mi">Q</span> 来自回答。</li>
+<li><span class="mi">K</span> 和 <span class="mi">V</span> 来自原句。</li>
+</ul>
+<p>两回都用同一个 <span class="mi">Q</span>。</p>
+<p>“了”取回的第二格：</p>
+<ul class="bullet-list">
+<li>换人前，约是 0.28。</li>
+<li>换人后，约是 0.72。</li>
+</ul>
+<p>原句换了人，变化就传到了回答这一行。</p>
+<!-- 多头分步播放器：手机上的主路径 -->
+<div class="demo-card">
+<div id="headWalk"></div>
+</div>
+<details class="collapse">
+<summary>可选：想一次看全整张流程图（手机建议先看上面的分步版）</summary>
+<figure class="tutorial-figure" style="margin-bottom:0">
+<a href="../assets/images/cross-attention-flow.webp" rel="noopener" target="_blank">
+<img alt="完整交叉注意力流程图，点击放大" loading="lazy" src="../assets/images/cross-attention-flow.webp"/>
+</a>
+<figcaption>点图可在新窗口放大看。</figcaption>
+</figure>
+</details>
+<details class="collapse">
+<summary>可选：动手看完整 4×31 数据（逐行查看）</summary>
+<div class="collapse-content">
+<p class="tip-text">下面是完整规模的示意数据。选回答的某一行，看它对原句 31 个位置各取多少。</p>
+<button class="run-btn" id="loadHeatBtn">查看完整数据</button>
+<div class="row-tabs" id="rowTabs"></div>
+<div id="rowBars" style="margin-top:12px;"></div>
+</div>
+</details>
+<p>可选材料先放这儿。下面回到主例子，看原句变化怎样传到取回的数。</p>
+<figure class="tutorial-figure">
+<img alt="看「了」两回取回来的数会不会随原句变化" class="zoomable" height="733" loading="lazy" src="../assets/images/img-84.webp" width="1100"/>
+<figcaption>原句一变，取回的就变。</figcaption>
+</figure>
+<p>先看取回的数会变。再把整条回答侧的通路接起来。</p>
+<p>掩码自注意力、交叉注意力和 FFN 合在一起，这条回答侧的通路，就是<strong>解码器</strong>。</p>
+<figure class="tutorial-figure">
+<img alt="同一份资料送到右边两层，每层都回头查一次原句，这条组织回答的通路叫解码器" class="zoomable" height="688" loading="lazy" src="../assets/images/img-85.webp" width="1100"/>
+<figcaption>靠回查，把两头接起来。</figcaption>
+</figure>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：交叉注意力，回答能根据原句变化取回不同结果。</p><p>下一篇接着看：给候选词打分并选出下一个词。</p></div><nav class="nav-bar">
+<a href="chapter-16.html">← 第 16 篇</a>
+<a href="chapter-18.html">第 18 篇 →</a>
+</nav>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/sentence-data.js?v=20261113w"></script>
+<script src="../js/token-strip.js?v=20261113w"></script>
+<script src="../js/ch17-data.js?v=20261113w"></script>
+<script src="../js/head-walk.js?v=20261113w"></script>
+<script>
+        const CHAPTER_ID = '17';
+        const TOTAL_STATIONS = 4;
+        const SITE_BASE = '..';
+
+        // 三个位置上的人物：原例 / 对调后
+        const NAMES = {
+            false: ['小明', '借给', '妹妹'],
+            true:  ['妹妹', '借给', '小明']
+        };
+        const POS_TAGS = ['第3处', '第15处', '第20处'];
+
+        renderStationProgress(document.getElementById('stationProgress'), CHAPTER_ID, TOTAL_STATIONS);
+        observeStations(CHAPTER_ID);
+
+        // 整章锚点：完整原句
+        TokenStrip.render(document.getElementById('topTokenStrip'), {
+            title: '原句长这样（31 个 Token）',
+            showNumbers: true
+        });
+        // 第 3 站：高亮三个关键位置
+        TokenStrip.render(document.getElementById('s2TokenStrip'), {
+            title: '这一回只看高亮的三个位置',
+            highlight: [SentenceData.keyPositions.xiaoMing, SentenceData.keyPositions.jieGei, SentenceData.keyPositions.meiMei],
+            showNumbers: true
+        });
+
+        // 第 4 站：多头分步播放器
+        HeadWalk.render(document.getElementById('headWalk'), {
+            base: SITE_BASE,
+            staticData: window.CH17_DATA.twoHeads
+        });
+
+        // ===== 第 1 站 =====
+        const s0View = document.getElementById('s0View');
+        let s0Swapped = false;
+        function paintS0() {
+            s0View.textContent = s0Swapped
+                ? '对调后：妹妹把书借给小明。\n“了”后面该接 → 小明'
+                : '原句：小明把书借给妹妹。\n“了”后面该接 → 妹妹';
+        }
+        paintS0();
+        document.getElementById('s0Toggle').addEventListener('click', () => {
+            s0Swapped = !s0Swapped;
+            paintS0();
+            markStationDone(CHAPTER_ID, 0);
+        });
+
+        // ===== 第 2 站先猜后验 =====
+        makeGuess(document.getElementById('s1Guess'), {
+            question: '原句对调后、但原句还没接进计算时，电脑会选谁？',
+            options: ['妹妹', '小明'],
+            correctIndex: 0,
+            explanation: '原句没进计算，它不知道变了，分数照旧，还是选妹妹——这就错了。',
+            chapterId: CHAPTER_ID,
+            stationIndex: 1
+        });
+
+        // ===== 第 3 站先猜后验 =====
+        makeGuess(document.getElementById('s2Guess'), {
+            question: '对调人物后，取回向量哪一格会变？',
+            options: ['第一格', '第二格', '两格都变'],
+            correctIndex: 1,
+            explanation: '第二格从 0.284 变成 0.7199，第一格 0.4359 保持不变。',
+            chapterId: CHAPTER_ID,
+            stationIndex: 2
+        });
+
+        // ===== 第 3 站：图形化回查 =====
+        const mainBtn = document.getElementById('recallMainBtn');
+        const recallResultEl = document.getElementById('recallResult');
+        const statusText = document.getElementById('statusText');
+        const coordCollapse = document.getElementById('coordCollapse');
+        const coordRows = document.getElementById('coordRows');
+        let recallReady = false;
+        let swapped = false;
+        let lastResult = null;
+
+        mainBtn.addEventListener('click', () => {
+            if (!recallReady) {
+                runRecall();
+                recallReady = true;
+                mainBtn.textContent = '对调人物';
+                markStationDone(CHAPTER_ID, 2);
+            } else {
+                swapped = !swapped;
+                runRecall();
+                mainBtn.textContent = swapped ? '恢复原例' : '对调人物';
+            }
+        });
+
+        function runRecall() {
+            const data = window.CH17_DATA.small[swapped ? 'true' : 'false'];
+            renderRecall(data);
+            renderCoords(data.inputs);
+            statusText.textContent = swapped ? '当前：人物已对调' : '当前：原例';
+        }
+
+        function renderRecall(data) {
+            const names = NAMES[swapped];
+            const bars = data.shares.map((share, i) => `
+                <div class="recall-line">
+                    <div class="recall-who">
+                        <span class="recall-name">${names[i]}</span>
+                        <span class="recall-pos">${POS_TAGS[i]}</span>
+                    </div>
+                    <div class="recall-mid">
+                        <span class="weight-track">
+                            <span class="weight-fill" style="width:${(share * 100).toFixed(1)}%"></span>
+                        </span>
+                    </div>
+                    <div class="recall-num">
+                        <span class="recall-score">分 ${data.scores[i]}</span>
+                        <span class="weight-num">${(share * 100).toFixed(1)}%</span>
+                    </div>
+                </div>`).join('');
+
+            const resultHtml = data.result.map((v, i) => {
+                const changed = lastResult && Math.abs(lastResult[i] - v) > 1e-9;
+                return `<span class="vec-cell ${changed ? 'cell-changed' : ''}">${v}${changed ? ' ←变了' : ''}</span>`;
+            }).join('');
+
+            recallResultEl.innerHTML = `
+                ${bars}
+                <p class="recall-zlabel">按比例取回的向量：</p>
+                <div class="result-vec">${resultHtml}</div>`;
+            lastResult = data.result;
+            coordCollapse.style.display = '';
+        }
+
+        function renderCoords(inputs) {
+            coordRows.innerHTML = inputs.map((row, i) => `
+                <div class="input-row">
+                    <span class="input-label">${POS_TAGS[i]} ${NAMES[swapped][i]}</span>
+                    <span class="vec-cell">${row[0]}</span>
+                    <span class="vec-cell">${row[1]}</span>
+                </div>`).join('');
+        }
+
+        // ===== 第 4 站：逐行条形 =====
+        const ROW_LABELS = ['第1行 〈起〉', '第2行 书', '第3行 借给', '第4行 了'];
+        let fullA = null;
+        let activeRow = 3;
+
+        document.getElementById('loadHeatBtn').addEventListener('click', () => {
+            fullA = window.CH17_DATA.fullTable.A;
+            renderRowTabs();
+            renderRowBars(activeRow);
+            markStationDone(CHAPTER_ID, 3);
+        });
+
+        function renderRowTabs() {
+            const tabs = document.getElementById('rowTabs');
+            tabs.innerHTML = ROW_LABELS.map((label, i) => `
+                <button class="row-tab ${i === activeRow ? 'row-tab-active' : ''}" data-row="${i}">${label}</button>`).join('');
+            tabs.querySelectorAll('.row-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    activeRow = Number(btn.dataset.row);
+                    renderRowTabs();
+                    renderRowBars(activeRow);
+                });
+            });
+        }
+
+        function renderRowBars(r) {
+            const row = fullA[r];
+            document.getElementById('rowBars').innerHTML = row.map((v, i) => `
+                <div class="weight-line">
+                    <span class="input-label">${i + 1} · ${SentenceData.tokenAt(i + 1)}</span>
+                    <span class="weight-track">
+                        <span class="weight-fill" style="width:${(v * 100).toFixed(2)}%"></span>
+                    </span>
+                    <span class="weight-num">${(v * 100).toFixed(2)}%</span>
+                </div>`).join('');
+        }
+    </script>
+</body>
+</html>

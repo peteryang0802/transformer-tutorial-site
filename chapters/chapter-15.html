@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 15 篇：把尺度理一理（层归一化）</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 15 篇　把尺度理一理：层归一化</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>从拆 Token 到注意力、FFN 加回，“书”这一行有了四个新数。</p>
+<p>下一轮，要拿更新后的 31 行重算 <span class="mi">Q</span>、<span class="mi">K</span>。</p>
+<p>可数字整体大一圈，取用比例就会变。</p>
+<p>这一篇先把每行的尺度理一理。</p>
+<figure class="tutorial-figure">
+<img alt="前情回顾：数的大小会让取用比例变多少，第11篇试算过" class="zoomable" height="816" loading="lazy" src="../assets/images/img-72.webp" width="1100"/>
+<figcaption>第 15 篇前情回顾。</figcaption>
+</figure>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>用层归一化稳住数值尺度，并搭出编码器一层。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 12–15 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 数的大小，会让比例变多少</h2>
+<p>第 11 篇我们试过：<span class="mi">Q</span> 不变，<span class="mi">K</span> 放大 10 倍。</p>
+<p>结果，“妹妹”的取用比例从近三成降到几乎为零。</p>
+<p>名次照旧，比例差很多。</p>
+<p>所以重算 <span class="mi">Q</span>、<span class="mi">K</span> 之前，先想办法把每一行数字的尺度理一理，别让数值越滚越大，毁掉后面的匹配。</p>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 整体抬高、放大，怎么剔除</h2>
+<p>拿“书”四格 <span class="mi">A</span>，每格先乘 2，再加 10，得到 <span class="mi">B</span>。两组内部的起伏一模一样。</p>
+<p>最直白的想法，是把 <span class="mi">B</span> 整体除以一个数，压回 <span class="mi">A</span> 的大小。试试除以 10：</p>
+<ul class="bullet-list">
+<li>中心从 12 变成 1.2，没回到 1。</li>
+<li>落差仍是 <span class="mi">A</span> 的两倍，也没对齐。</li>
+</ul>
+<p>只除以一个数，中心和尺子顾不到两头。所以分两步：</p>
+<ul class="bullet-list">
+<li>先把中心对齐：每格减去自己这一排的平均数（A 均 1，B 均 12），两排都围着 0。</li>
+<li>再把尺子对齐：除以自己这排的标准差（A 标准差 1，B 标准差 2），距离和尺子都翻倍，两倍就抵掉了。</li>
+</ul>
+<p>再用 <span class="mi">C</span> 验证。它和 <span class="mi">A</span> 的平均数、标准差一样，高低却放在不同位置。</p>
+<p>整理后，<span class="mi">A</span>、<span class="mi">B</span> 对上，<span class="mi">C</span> 仍分得开。</p>
+<p>这两步叫<strong>标准化</strong>。</p>
+<p>实际计算时，会在方差上加一个很小的正数 <span class="mi">ε</span>，再开根号。这样哪怕四格全一样，分母也不会是 0。</p>
+<p>要是平均数、标准差这两个词已经有点陌生，别急，下面这个小实验能动手复习，点一点就明白了。</p>
+<details class="collapse math-card" open="">
+<summary><span class="math-tag">数学小卡片</span>动手复习：方差和标准差怎么算</summary>
+<div class="collapse-content">
+<p>标准差在量一组数“散得有多开”。</p>
+<p>计算顺序是：</p>
+<ul class="bullet-list">
+<li>先看平均数。</li>
+<li>再看每个数离平均数多远。</li>
+<li>把这些距离平方，求平均，得到<strong>方差</strong>。</li>
+<li>方差再开根号，就是<strong>标准差</strong>。</li>
+</ul>
+<div id="varianceLab"></div>
+</div>
+</details>
+<div class="demo-card" data-chapter="15" data-station="1" id="lnDemo"></div>
+<p>先动手复习方差和标准差。再用 A、B、C 三排数，看标准化怎么把尺度对齐。</p>
+<div class="demo-card" data-chapter="15" data-station="1" id="threeRowDemo"></div>
+<p class="tip-text">课堂示例数值：A、B、C 是为了看清标准化单独设的三排数。</p>
+<div id="soft-2"></div>
+<p class="pause-point">这里可以先歇一下，下次从这一站接着读。</p></section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 为什么还要再乘、再加</h2>
+<p>整理后，每行用自己的尺子量，按同一种规矩读。</p>
+<p>可后面还可能需要：</p>
+<ul class="bullet-list">
+<li>把某一列拉开一点。</li>
+<li>把某一列整体挪高一点。</li>
+</ul>
+<p>所以得留下调整的地方。</p>
+<p>给每一列留两个旋钮：</p>
+<ul class="bullet-list">
+<li>先乘一个数，调幅度。</li>
+<li>再加一个数，调高低。</li>
+</ul>
+<p>同一列的 31 行，共用这一对。</p>
+<p>按行标准化，加上按列乘加，合起来叫<strong>层归一化</strong>（Layer Normalization，LN）。</p>
+<div class="demo-card" data-chapter="15" data-station="2" id="layerFlowDemo"></div>
+<div id="soft-3"></div>
+</section>
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 接成一层，堆成编码器</h2>
+<p>跟着“书”走，一层里有两次整理：</p>
+<ul class="bullet-list">
+<li>注意力算出的四格加回后，整理好，交 FFN。</li>
+<li>FFN 算出的四格加回后，再整理一次，往下传。</li>
+</ul>
+<p>一层里有多头自注意力、FFN，还有两次 LN，各有独立参数。</p>
+<p>这一层的 <span class="mi">Q</span>、<span class="mi">K</span>、<span class="mi">V</span> 都用刚进来的 31 行算。</p>
+<p>所以：</p>
+<ul class="bullet-list">
+<li>“妹妹”这一行刚更新完，可这一层用的还是进门时那批旧数。</li>
+<li>“她”这轮查到的仍是旧的“妹妹”。</li>
+</ul>
+<p>下一层拿更新后的数重算，才有机会查到。</p>
+<p>第一层从入口的 31 行开始。再接一层，就把上一层输出交给它。每层都有自己独立的参数。</p>
+<p>这么一层层堆起来，这条专门解读原句的通路，叫<strong>编码器</strong>。</p>
+<p>走完后，行数、格数照旧。第几行，仍对应原句第几个位置。</p>
+<p>回望一层里的四件事：</p>
+<ul class="bullet-list">
+<li>注意力管<strong>取</strong>。</li>
+<li>FFN 管<strong>造</strong>。</li>
+<li>残差管<strong>留</strong>。</li>
+<li>层归一化管<strong>稳</strong>。</li>
+</ul>
+<figure class="tutorial-figure">
+<img alt="这层算完把更新后的31行一起交下去，下一层拿这批数重算" class="zoomable" height="398" loading="lazy" src="../assets/images/img-75.webp" width="1100"/>
+<figcaption>算完一层，往下传。</figcaption>
+</figure>
+<p>第一张图看一层怎么往下传。再把多层叠起来，看整条编码器。</p>
+<figure class="tutorial-figure">
+<img alt="一层一层堆叠起来，这条专门编码解读原句的通路叫编码器" class="zoomable" height="733" loading="lazy" src="../assets/images/img-76.webp" width="1100"/>
+<figcaption>叠起来，就是编码器。</figcaption>
+</figure>
+<div id="soft-4"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：编码器一层的完整结构，以及堆叠起来的编码器。</p><p>下一篇接着看：给回答侧加因果掩码。</p></div><nav class="nav-bar">
+<a href="chapter-14.html">← 第 14 篇</a>
+<a href="chapter-16.html">第 16 篇 →</a>
+</nav>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/math-interact.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '15';
+            renderVarianceLab(document.getElementById('varianceLab'));
+            var totalStations = 4;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            DemoInteract.renderLN(document.getElementById('lnDemo'));
+            StepInteract.renderLayerFlow(document.getElementById('layerFlowDemo'));
+            StepInteract.renderThreeRow(document.getElementById('threeRowDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

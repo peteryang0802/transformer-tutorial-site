@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 12 篇：分两路查，再拼起来</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 12 篇　分两路查，再拼起来：多头</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前面拆 Token、做 <span class="mi">QKV</span>、缩放 softmax、<span class="mi">V</span> 取回。句中 31 个位置，各能查回一份结果。</p>
+<p>可看“书”时，我们想问两件事：</p>
+<ul class="bullet-list">
+<li>是谁买的？</li>
+<li>封面什么颜色？</li>
+</ul>
+<p>这一篇让它分两路查。</p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>分成两个注意力头，分别保留不同查找结果，再用 <span class="mi">W<sub>O</sub></span> 组合。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 12–16 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 想分别保留两种结果</h2>
+<p>两个问题，想取的线索不一样：</p>
+<ul class="bullet-list">
+<li>查谁买的：希望多取“妈妈”。</li>
+<li>查封面颜色：希望多取“蓝色”。</li>
+</ul>
+<p>可“书”拿自己的向量查一回，只能得到一套比例。“妈妈”分到 90%，其他就只剩 10%。</p>
+<p>我们想留下两份独立结果：</p>
+<ul class="bullet-list">
+<li>一份偏重妈妈。</li>
+<li>一份偏重蓝色。</li>
+</ul>
+<p>两份分开存，互不干扰。</p>
+<p>就像看宝宝照片：</p>
+<ul class="bullet-list">
+<li>想知道眼睛颜色，就看虹膜。</li>
+<li>想知道眼睛大不大，就看轮廓和比例。</li>
+</ul>
+<p>两路都在看眼睛附近，取回来的线索却不同。</p>
+<p>同一个宝宝、同一份资料，分两路各记一份。</p>
+<figure class="tutorial-figure">
+<img alt="看颜色留意虹膜、看大小看眼睛轮廓比例，两次都在同一张照片上" class="zoomable" height="550" loading="lazy" src="../assets/images/img-49.webp" width="1100"/>
+<figcaption>两个问题，两种结果。</figcaption>
+</figure>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 同一个“书”，分两路</h2>
+<p>头多了，总格数不用跟着多。4 格分两路，每头管 2 格，拼回来还是 4 格。</p>
+<p>所以从这一篇开始，改用每行四格的输入，方便看清两路各取回两格，再接成一行四格。</p>
+<p>把这两路想成两个负责查资料的小脑袋。同一份资料摆在面前，它们：</p>
+<ul class="bullet-list">
+<li>各用各的办法打分。</li>
+<li>各算各的比例。</li>
+<li>各拿回一份结果。</li>
+</ul>
+<p>这样一路注意力计算，叫一个<strong>注意力头</strong>。</p>
+<p>拿一行 [1,2,3,4] 演示怎么乘 <span class="mi">W<sub>Q</sub></span>，算出两格的 <span class="mi">q</span>。</p>
+<ul class="bullet-list">
+<li>第一列系数算第一格。</li>
+<li>第二列系数算第二格。</li>
+<li>每格都用到完整的四个输入。</li>
+</ul>
+<p>两个头都读同一张输入表。到同一位置时，它们用各自的 <span class="mi">W<sub>Q</sub></span>、<span class="mi">W<sub>K</sub></span>、<span class="mi">W<sub>V</sub></span>。</p>
+<div id="soft-2"></div>
+<p class="pause-point">这里可以先歇一下，下次从这一站接着读。</p></section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 两路怎么算出不同配方</h2>
+<p>让两个头的 <span class="mi">W<sub>Q</sub></span>、<span class="mi">W<sub>V</sub></span> 相同，只换 <span class="mi">W<sub>K</sub></span>。</p>
+<p>演示分数是：</p>
+<ul class="bullet-list">
+<li>第一路：4 和 0。</li>
+<li>第二路：0 和 4。</li>
+</ul>
+<p>先除以 <span class="mi">√2</span>，再 softmax。每个头的 <span class="mi">q</span>、<span class="mi">k</span> 是两格，所以 <span class="mi">√d＝√2</span>。</p>
+<p>结果，第一路多取“妈妈”，第二路多取“蓝色”。</p>
+<p>再给两个词设 <span class="mi">v</span>：</p>
+<ul class="bullet-list">
+<li>“妈妈”的 <span class="mi">v</span>：[1,0]。</li>
+<li>“蓝色”的 <span class="mi">v</span>：[0,1]。</li>
+</ul>
+<p>结果：</p>
+<ul class="bullet-list">
+<li>第一路取回约 [0.94, 0.06]。</li>
+<li>第二路取回约 [0.06, 0.94]。</li>
+</ul>
+<p>同一份输入，查出两份各有侧重的结果。</p>
+<p>让多个头分别查、再组合，叫<strong>多头注意力</strong>。</p>
+<figure class="tutorial-figure">
+<img alt="按妈妈蓝色的顺序，第一路4和0、第二路另两个，两路算出不同配方" class="zoomable" height="611" loading="lazy" src="../assets/images/img-50.webp" width="1100"/>
+<figcaption>两路配方，刻意分开。</figcaption>
+</figure>
+<div id="soft-3"></div>
+</section>
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 先拼接，再用 <span class="mi">W<sub>O</sub></span> 组合</h2>
+<p>两个头各取回两格。</p>
+<p>把第一头的两格放前面，第二头接后面，就得到一行四格。这一步叫<strong>拼接</strong>，四个数都不改。</p>
+<p>再给这四个数分别乘系数，加起来算一个输出格。</p>
+<p>这些系数排成 4 行 4 列的 <span class="mi">W<sub>O</sub></span>，共 16 个系数。每个位置都用同一张。</p>
+<p>31 个位置都照这套做：</p>
+<ul class="bullet-list">
+<li>分两路，各查整句 31 处，自己也算。</li>
+<li>拼接。</li>
+<li>用 <span class="mi">W<sub>O</sub></span> 组合。</li>
+</ul>
+<p>最后仍是 31 行，每行四格，留给下一步。</p>
+<div class="demo-card" data-chapter="12" data-station="3" id="twoHeadsDemo"></div>
+<p>动手走完两个头，再看静态图：拼接只是把四格按顺序接起来，数本身不改。</p>
+<figure class="tutorial-figure">
+<img alt="把两个头各取回的两格按顺序接起来，四个数都不改" class="zoomable" height="733" loading="lazy" src="../assets/images/img-52.webp" width="1100"/>
+<figcaption>拼接就是按顺序接，不改数。</figcaption>
+</figure>
+<p>拼接确认后，再用矩阵地图把这一篇出现的矩阵整理一遍。</p>
+<div class="demo-card" data-chapter="12" data-station="3" id="matrixMapDemo"></div>
+<div id="soft-4"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：两头的独立结果、拼接结果，以及 <span class="mi">W<sub>O</sub></span> 组合后的四格向量。</p><p>下一篇接着看：把新线索加回原输入，不顶替原信息。</p></div><nav class="nav-bar">
+<a href="chapter-11.html">← 第 11 篇</a>
+<a href="chapter-13.html">第 13 篇 →</a>
+</nav>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '12';
+            var totalStations = 4;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            DemoInteract.renderTwoHeads(document.getElementById('twoHeadsDemo'));
+            StepInteract.renderMatrixMap(document.getElementById('matrixMapDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

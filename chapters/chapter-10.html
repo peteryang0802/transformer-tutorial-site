@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 10 篇：把算 K 写成系数矩阵</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 10 篇　把算 <span class="mi">K</span> 写成系数矩阵</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前面拆 Token、配向量、加位置，用 <span class="mi">QK</span> 打分、softmax 换比例、<span class="mi">V</span> 取回。之前试过统一转 90°，三道新题过了，可回头一查，“她”本来该多用“妹妹”，却偏向了“封面”。这一篇找一条能兼顾新旧要求的规矩。</p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>找出能同时满足五道题的 <span class="mi">W<sub>K</sub></span>，候选矩阵共 81 个。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 12–16 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 新题旧题，能不能一起过</h2>
+<p>先把五道题摆在一起：</p>
+<ul class="bullet-list">
+<li>旧题 2 道：第 6 篇的“她”“蓝色”。</li>
+<li>新题 3 道：第 8 篇的“小明”“借给”“妹妹”。</li>
+</ul>
+<p>每试一个新办法，就拿这五道一起查。</p>
+<p>这两次实验各沿用当时的数字，所以“妹妹”在两组里的数不同。</p>
+<p>这次只换 <span class="mi">K</span> 的生成办法。输入和检查要求都不变。</p>
+<figure class="tutorial-figure">
+<img alt="第6篇两道旧题和第8篇三道新题摆在一起，每次试新办法看能不能一起过" class="zoomable" height="619" loading="lazy" src="../assets/images/img-33.webp" width="1100"/>
+<figcaption>新题旧题，要一起过。</figcaption>
+</figure>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 除了转 90°，还能怎么加工</h2>
+<p>把 90° 转法写成矩阵乘法，中间那四个数就是一张系数矩阵，记作 <span class="mi">W<sub>K</sub></span>。把这四个数想成四个可调旋钮：换一组系数，既可以改箭头朝向，也可以改长度。无论哪个位置、哪次查询，用的都是同一张 <span class="mi">W<sub>K</sub></span>。</p>
+<p>写成公式 <span class="mi">K＝XW<sub>K</sub></span>：<span class="mi">X</span> 放各位置输入，<span class="mi">W<sub>K</sub></span> 放共用系数，<span class="mi">K</span> 里是算出的结果。整句 31 行，<span class="mi">W<sub>K</sub></span> 只有 2 行 2 列。</p>
+<figure class="tutorial-figure">
+<img alt="把系数想成四个旋钮，换一组系数就换一种加工办法" class="zoomable" height="688" loading="lazy" src="../assets/images/img-34.webp" width="1100"/>
+<figcaption>四个旋钮，定一种加工。</figcaption>
+</figure>
+<p>静态图先看旋钮。下面这个演示，能直接改四个系数，看矩阵怎么变。</p>
+<div class="demo-card" data-chapter="10" data-station="1" id="sharedWeightDemo"></div>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 81 个候选，谁能五道全过</h2>
+<p>先规定每个系数只试 -1、0、1。四个旋钮，每个旋钮有三种拧法，合起来 <span class="mi">3<sup>4</sup></span>＝81 个候选。原样通过、90° 转法都在里面。</p>
+<p>电脑会按同一个顺序逐个查：</p>
+<ul class="bullet-list">
+<li>拿一个候选算出 <span class="mi">K</span>。</li>
+<li>检查五条大小关系。</li>
+<li>记下这一组能过几道。</li>
+<li>换下一个候选，直到 81 个全查完。</li>
+</ul>
+<p>这种重复计算，正是电脑擅长的。</p>
+<p>结果，五道全过的只有一个。</p>
+<p>办法很简单：<strong>第一格照旧，第二格减去原来的第一格</strong>。</p>
+<p>三种办法对照看：</p>
+<ul class="bullet-list">
+<li>原样通过：过 3 道。</li>
+<li>90° 转法：过 4 道。</li>
+<li>选中矩阵：5 道全过。</li>
+</ul>
+<p>但这只说明它满足眼前要求。换组输入，还得继续查。</p>
+<div class="demo-card" data-chapter="10" data-station="2" id="candidateFilterDemo"></div>
+<p>筛完之后，先把选中的矩阵代回三行，看它是不是真的算对。</p>
+<figure class="tutorial-figure">
+<img alt="拿第8篇三行输入，按选中的系数算一次，结果全对" class="zoomable" height="619" loading="lazy" src="../assets/images/img-37.webp" width="1100"/>
+<figcaption>代回三行，验证一遍。</figcaption>
+</figure>
+<p>代回确认没问题，再和另外两种办法放在一起比。</p>
+<figure class="tutorial-figure">
+<img alt="选中的系数是81个里唯一五道都过的，和另外两种办法放一起对比" class="zoomable" height="619" loading="lazy" src="../assets/images/img-38.webp" width="1100"/>
+<figcaption>三种办法比，只有它全过。</figcaption>
+</figure>
+<div id="soft-3"></div>
+<p class="pause-point">这里可以先歇一下，下次从这一站接着读。</p></section>
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 共用系数，怎么各取各</h2>
+<p>你可能要问：前面刚说固定配比不够，现在又共用系数，是不是绕回去了？先拿数字看。</p>
+<ul class="bullet-list">
+<li>“妹妹”输入 [4,0]，算出 <span class="mi">K</span>[4,-4]。</li>
+<li>“封面”输入 [0,4]，算出 <span class="mi">K</span>[0,4]。</li>
+</ul>
+<p>再换两个查询：</p>
+<ul class="bullet-list">
+<li>“她”的 <span class="mi">Q</span>[1,0] 点积：妹妹 4 分，封面 0 分。</li>
+<li>“蓝色”的 <span class="mi">Q</span>[0,1] 点积：妹妹 -4 分，封面 4 分。</li>
+</ul>
+<p>这就像同一把尺子量不同的人。尺子没换，量出的身高不同。</p>
+<p>共用的是计算规则。每次取谁、取多少，仍由当时输入算出来。</p>
+<p><span class="mi">Q</span> 和 <span class="mi">V</span> 也可以各给一张系数矩阵 <span class="mi">W<sub>Q</sub></span>、<span class="mi">W<sub>V</sub></span>。</p>
+<p>这些 <span class="mi">W</span> 就是常说的<strong>权重矩阵</strong>。里面的系数是模型参数的一部分，训练时根据误差调整。</p>
+<p>这里有两个“权重”，别混在一起：</p>
+<ul class="bullet-list">
+<li>权重矩阵里的权重：训练时调整的系数。</li>
+<li>注意力权重：每次查询时，各份资料分到的比例。</li>
+</ul>
+<p>这些系数到底怎么一点点调出来的，这一篇先不展开。先把它们当成可以试的旋钮，看它们怎么用。</p>
+<div class="demo-card" data-chapter="10" data-station="3" id="switchQDemo"></div>
+<p>先看换 <span class="mi">Q</span> 后分数怎么变。再把三张矩阵的来路放在一起整理。</p>
+<div class="demo-card" data-chapter="10" data-station="3" id="threeMatrixDemo"></div>
+<div id="soft-4"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：唯一通过五道题的 <span class="mi">W<sub>K</sub></span>，以及共用系数仍能产生不同查询结果。</p><p>下一篇接着看：研究分数差距怎样影响 softmax 比例。</p></div><nav class="nav-bar">
+<a href="chapter-09.html">← 第 9 篇</a>
+<a href="chapter-11.html">第 11 篇 →</a>
+</nav>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '10';
+            var totalStations = 4;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            DemoInteract.renderCandidateFilter(document.getElementById('candidateFilterDemo'));
+            StepInteract.renderSwitchQ(document.getElementById('switchQDemo'));
+            StepInteract.renderSharedWeight(document.getElementById('sharedWeightDemo'));
+            StepInteract.renderThreeMatrix(document.getElementById('threeMatrixDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

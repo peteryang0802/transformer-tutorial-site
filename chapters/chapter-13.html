@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 13 篇：线索要加回自己（残差）</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 13 篇　线索要加回自己：残差连接</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>从一句长话出发，我们已经做了这些事：</p>
+<ul class="bullet-list">
+<li>拆 Token，配位置。</li>
+<li>扩到整句检索。</li>
+<li><span class="mi">QK</span> 打分，softmax 混 <span class="mi">V</span>。</li>
+<li>分两路，再拼接。</li>
+</ul>
+<p>上一篇，“书”从两路取回了四格。</p>
+<p>现在它手上有两组数字：</p>
+<ul class="bullet-list">
+<li>一开始自带的原始四格。</li>
+<li>这一轮检索回来的四格。</li>
+</ul>
+<p>这一篇决定该怎么合。</p>
+<figure class="tutorial-figure">
+<img alt="前情回顾：同一位置分两路检索，拿到不一样的信息" class="zoomable" height="733" loading="lazy" src="../assets/images/img-55.webp" width="1100"/>
+<figcaption>第 13 篇前情回顾。</figcaption>
+</figure>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>用残差连接把新线索加回原输入，不顶替原来的信息。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 9–12 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 能直接用检索回来的覆盖吗</h2>
+<p>想想银行卡。</p>
+<p>卡里原本有 100 元，今天入账 20 元。</p>
+<p>如果银行不做加法，直接删掉原来的 100，填上 20，余额就从 100 变成 20。</p>
+<p>它把“本次新增”错当成了“当前余额”。</p>
+<p>拿简单数字看：</p>
+<ul class="bullet-list">
+<li>原来：[1,1,0,0]。</li>
+<li>这轮改动量：[0,0,1,1]，后两格各补 1。</li>
+</ul>
+<p>如果直接填进去，整行变成 [0,0,1,1]，前两个 1 当场变成 0。</p>
+<p>改动量里的 0，意思是“这里不需要改”。</p>
+<p>一旦顶替原值，0 就变成了“这个位置本身就是 0”。</p>
+<p>下面这张图，把银行卡和“书”的错误摆在一起看。</p>
+<figure class="tutorial-figure">
+<img alt="银行卡把新增20元误当余额，和“书”把改动量0误当原值的错误对照" class="zoomable" height="733" loading="lazy" src="../assets/images/img-56.webp" width="1100"/>
+<figcaption>直接顶替，会误伤。</figcaption>
+</figure>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 不要顶替，加回去</h2>
+<p>回到银行卡：100 加 20，得 120。没有新增，就加 0，维持 100。</p>
+<p>“书”也一样：</p>
+<ul class="bullet-list">
+<li>[1,1,0,0] 加 [0,0,1,1]。</li>
+<li>等于 [1,1,1,1]。</li>
+</ul>
+<p>前两格加 0，信息完好。后两格加 1，线索补进来。</p>
+<p>给“书”做两组对照：</p>
+<ul class="bullet-list">
+<li>第 1 回输入 [1,1,0,0]。</li>
+<li>第 2 回只把第二格改成 0，输入 [1,0,0,0]。</li>
+</ul>
+<p>假设这一轮计算，两回都算出第二格的新值是 1。</p>
+<p>如果直接顶替，两回交出去的第二格都是 1。原来 1 和 0 的差别没了。</p>
+<p>如果加回：</p>
+<ul class="bullet-list">
+<li>第 1 回 <span class="mi">1+1＝2</span>。</li>
+<li>第 2 回 <span class="mi">0+1＝1</span>。</li>
+</ul>
+<p>原本的差异继续维持。</p>
+<div class="demo-card" data-chapter="13" data-station="1" id="residualAddDemo"></div>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 残差连接，还给反馈留了近路</h2>
+<p>输入表 <span class="mi">X</span> 和取回表 <span class="mi">Z</span>，在同一位置、同一格对齐相加：<span class="mi">Y＝X+Z</span>。</p>
+<p>让原数走一条直通线到加号，另一条送来本轮新算的数。这种接法叫<strong>残差连接</strong>。</p>
+<p>这样模型只需学本轮要调整多少：</p>
+<ul class="bullet-list">
+<li>想调高，就配正向改动。</li>
+<li>想调低，就配反向改动。</li>
+<li>不用改的地方，改动量是 0。</li>
+</ul>
+<p>训练时，调整信号要从后往前传。</p>
+<p>就像公司里用户说“找不到结账按钮”。层层转述到产品那里，可能只剩“体验有提升空间”，到底改哪儿听不清。</p>
+<p>残差也给信号留了一条近路。它可以沿原数那条路往回走，绕过这一轮计算。</p>
+<p>下面这张图，看这条近路怎么留出来。</p>
+<figure class="tutorial-figure">
+<img alt="训练时用来调整参数的信号要从后往前传，每层都加回自己的输入" class="zoomable" height="733" loading="lazy" src="../assets/images/img-58.webp" width="1100"/>
+<figcaption>加回输入，信号才传得回去。</figcaption>
+</figure>
+<p>图先看清近路。下面这个电路板，可以自己点一点，看原数怎么绕回来。</p>
+<div class="demo-card" data-chapter="13" data-station="2" id="residualDemo"></div>
+<p>主线到这儿就够了。要是还想顺着宝宝照片再看一遍，再打开下面的折叠区。</p>
+<details class="collapse">
+<summary>可选：把这套流程在宝宝照片上再看一遍（4 张图）</summary>
+<p>这部分只是补一条照片线。按切块、检索、分头、加回的顺序看。</p>
+<figure class="tutorial-figure">
+<img alt="先把照片切成小块，每块配一行数字、记下位置，和拆分长句对应" class="zoomable" height="550" loading="lazy" src="../assets/images/img-59.webp" width="1100"/>
+<figcaption>回头看，第一步是切块。</figcaption>
+</figure>
+<p>先切块。接着带着问题去检索。</p>
+<figure class="tutorial-figure">
+<img alt="带眼睛是什么颜色这个问题去检索，先打分再照比例取，和句子流程相同" class="zoomable" height="550" loading="lazy" src="../assets/images/img-60.webp" width="1100"/>
+<figcaption>同样的流程，搬到照片上。</figcaption>
+</figure>
+<p>检索流程对上以后，再看两个头怎么分头查。</p>
+<figure class="tutorial-figure">
+<img alt="看眼睛颜色和大小的两个查询分两路检索，分别拿到颜色、大小信息" class="zoomable" height="550" loading="lazy" src="../assets/images/img-61.webp" width="1100"/>
+<figcaption>两路各查各的。</figcaption>
+</figure>
+<p>两路信息都拿到，最后合起来加回去。</p>
+<figure class="tutorial-figure">
+<img alt="把查到的眼睛颜色和大小线索合起来，补充到原来对宝宝眼睛的认识" class="zoomable" height="550" loading="lazy" src="../assets/images/img-62.webp" width="1100"/>
+<figcaption>合起来，再加回去。</figcaption>
+</figure>
+</details>
+<div id="soft-3"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：残差连接，原输入和新改动可以一起往后传。</p><p>下一篇接着看：用 FFN 处理更复杂的组合判断。</p></div><nav class="nav-bar">
+<a href="chapter-12.html">← 第 12 篇</a>
+<a href="chapter-14.html">第 14 篇 →</a>
+</nav>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/circuit-board.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '13';
+            var totalStations = 3;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            CircuitBoard.renderResidual(document.getElementById('residualDemo'));
+            StepInteract.renderResidualAdd(document.getElementById('residualAddDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

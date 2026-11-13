@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>从一句话出发逐步构造 Transformer</title><link href="favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<h1>从一句话出发逐步构造 Transformer</h1>
+<p>这是一份从零开始的交互式教程。正文以阅读为主，遇到光靠文字讲不清的地方，会出现可以动手调一调、先猜后验的演示。进度存在你自己的浏览器里，不用注册。</p>
+<div id="continueWrap" style="margin:16px 0;"></div>
+<h2>目录</h2>
+<ul class="chapter-list">
+<li><a href="chapters/preface.html">写在前面：我想从一句话开始，把 Transformer 重新搭一遍</a></li>
+</ul>
+<ul class="chapter-list" id="chapterList"></ul>
+<p class="tip-text">19 个单元都能通读，每篇都有可以动手的小演示，第 17 篇的演示最完整。</p>
+<script src="js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="js/progress.js?v=20261113w"></script>
+<script>
+        // 章节元数据：id 两位编号，file 指向章节页，stations 是这一章分几站
+        const CHAPTERS = [
+            { id: 1,  title: '把长句拆成一个一个的小单元', file: 'chapters/chapter-01.html', stations: 4 },
+            { id: 2,  title: '给每个 Token 配一组能计算的数', file: 'chapters/chapter-02.html', stations: 3 },
+            { id: 3,  title: '让“站在哪儿”也参与计算', file: 'chapters/chapter-03.html', stations: 3 },
+            { id: 4,  title: '让前面的词也参加计算', file: 'chapters/chapter-04.html', stations: 3 },
+            { id: 5,  title: '让“她”找到远处的“妹妹”', file: 'chapters/chapter-05.html', stations: 4 },
+            { id: 6,  title: '带着问题去找：Query 和点积', file: 'chapters/chapter-06.html', stations: 4 },
+            { id: 7,  title: '把分数变成取用比例：softmax', file: 'chapters/chapter-07.html', stations: 3 },
+            { id: 8,  title: '分开“我查”和“被查”：Key', file: 'chapters/chapter-08.html', stations: 4 },
+            { id: 9,  title: '比例该乘在哪组数上：Value', file: 'chapters/chapter-09.html', stations: 3 },
+            { id: 10, title: '把算 K 写成系数矩阵', file: 'chapters/chapter-10.html', stations: 4 },
+            { id: 11, title: '分数差太多，怎么稳住：缩放', file: 'chapters/chapter-11.html', stations: 3 },
+            { id: 12, title: '分两路查，再拼起来：多头', file: 'chapters/chapter-12.html', stations: 4 },
+            { id: 13, title: '线索要加回自己：残差连接', file: 'chapters/chapter-13.html', stations: 3 },
+            { id: 14, title: '同一行里重新组合：FFN', file: 'chapters/chapter-14.html', stations: 4 },
+            { id: 15, title: '把尺度理一理：层归一化', file: 'chapters/chapter-15.html', stations: 4 },
+            { id: 16, title: '只准看已经写出来的：因果掩码', file: 'chapters/chapter-16.html', stations: 4 },
+            { id: 17, title: '回答时回查原句：交叉注意力', file: 'chapters/chapter-17.html', stations: 4 },
+            { id: 18, title: '给词表打分，选出下一个词', file: 'chapters/chapter-18.html', stations: 4 }
+        ];
+
+        const listEl = document.getElementById('chapterList');
+        CHAPTERS.forEach(ch => {
+            const li = document.createElement('li');
+            const cid = String(ch.id).padStart(2, '0');
+            const status = chapterStatus(cid, ch.stations);
+            const badge = makeBadge(status, cid, ch.stations);
+
+            const a = document.createElement('a');
+            a.href = ch.file;
+            a.textContent = `第 ${ch.id} 篇　${ch.title}`;
+            li.appendChild(a);
+            li.appendChild(badge);
+            listEl.appendChild(li);
+        });
+
+        function makeBadge(status, cid, stations) {
+            const badge = document.createElement('span');
+            badge.className = 'status-badge';
+            if (status === 'done') {
+                badge.classList.add('badge-done');
+                badge.textContent = '已点亮';
+            } else if (status === 'in-progress') {
+                badge.classList.add('badge-progress');
+                badge.textContent = `进行中 ${litCount(cid)}/${stations}`;
+            } else {
+                badge.classList.add('badge-notstarted');
+                badge.textContent = '未开始';
+            }
+            return badge;
+        }
+
+        // 续读按钮
+        const target = getContinueTarget();
+        if (target) {
+            const ch = CHAPTERS.find(c => String(c.id).padStart(2, '0') === target.chapterId);
+            if (ch && ch.file) {
+                const wrap = document.getElementById('continueWrap');
+                const btn = document.createElement('button');
+                btn.className = 'run-btn';
+                btn.textContent = '接着上次读 →';
+                btn.addEventListener('click', () => {
+                    window.location.href = `${ch.file}#station-${target.station}`;
+                });
+                wrap.appendChild(btn);
+            }
+        }
+    </script>
+</body>
+</html>

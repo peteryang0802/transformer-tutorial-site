@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 18 篇：给词表打分，选出下一个词</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 18 篇　给词表打分，选出下一个词</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前面三篇分别做了这些事：</p>
+<ul class="bullet-list">
+<li>第 15 篇搭好编码器。</li>
+<li>第 16 篇给解码器加上掩码。</li>
+<li>第 17 篇用交叉注意力回查原句。</li>
+</ul>
+<p>现在写到〈起〉｜书｜借给｜了。</p>
+<p>要拿“了”交出的四个数，给词表候选打分。这一篇看怎么选下一个词。</p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>用 <span class="mi">W<sub>out</sub></span> 给候选词打分、转概率，并看清少量校准和完整训练的边界。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 13–17 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 四个数，怎么给词表打分</h2>
+<p>“了”最后交出四个数。</p>
+<p>词表里每个候选词，都配专属的一列系数。</p>
+<p>把这四个数和那一列系数逐个相乘，再加上偏置，这个候选就得到一个分。</p>
+<p>第 1 篇去重得到 27 种 Token，加上〈起〉，一共 28 项。</p>
+<p>打分矩阵 <span class="mi">W<sub>out</sub></span> 是 4 行、28 列。</p>
+<p>每个候选词还有一个偏置。28 个偏置合起来，记作 <span class="mi">b<sub>out</sub></span>。</p>
+<p>这次先让程序随机填，填好后固定。</p>
+<p>再用 softmax，把 28 个分数转成 28 个概率，总和为 1。</p>
+<div class="formula">
+<span class="mi">p</span> = softmax(<span class="mi">yW<sub>out</sub></span> + <span class="mi">b<sub>out</sub></span>)
+        </div>
+<p>上面的公式可以这样理解：</p>
+<ul class="bullet-list">
+<li>先用 <span class="mi">y</span> 乘 <span class="mi">W<sub>out</sub></span>，算出基础分。</li>
+<li>再给每个词加上它专属的偏置 <span class="mi">b<sub>out</sub></span>。</li>
+<li>最后用 softmax 转成概率 <span class="mi">p</span>。</li>
+</ul>
+<p class="tip-text">这里的 out 是它名字的一部分，和第 12 篇的 O 不是同一个矩阵。<span class="mi">W<sub>O</sub></span> 是 4×4，<span class="mi">W<sub>out</sub></span> 是 4×28。</p>
+<p class="tip-text">这里只展开两项讲关键差别，其余候选先折叠；真实计算时 28 项会一起打分、一起 softmax。</p>
+<div class="demo-card" data-chapter="18" data-station="0" id="scoreColumnDemo"></div>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 第一次选谁</h2>
+<p>先看两个候选的分数：</p>
+<ul class="bullet-list">
+<li>“妹妹”约 0.447 分。</li>
+<li>“买”约 0.929 分，排第一。</li>
+</ul>
+<p>原句明明说借给妹妹，该接人名，却接出个“买”。</p>
+<p>差距最大的是第四项：</p>
+<ul class="bullet-list">
+<li>同一个数给“买”贡献约 0.713。</li>
+<li>给“妹妹”只贡献约 0.073。</li>
+</ul>
+<p>〈起〉只是开场信号，不算候选词。先把它从候选里拿掉，在剩下的 27 个里挑分最高的。</p>
+<p>这叫<strong>贪心选词</strong>。</p>
+<p class="tip-text">这里说的是 softmax 之前的打分；先看打分排名挑词，softmax 再把这些打分换成总和为 1 的概率。</p>
+<figure class="tutorial-figure">
+<img alt="回答末尾的「了」算上〈起〉排第4，走解码器回头查编码器交来的资料" class="zoomable" height="733" loading="lazy" src="../assets/images/img-88.webp" width="1100"/>
+<figcaption>选一个，再接着往下。</figcaption>
+</figure>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 选完接回去，再试试抬高妹妹</h2>
+<p>每选出一个词，就把它接回开头，用同一套参数算下一个词。这叫<strong>自回归生成</strong>。</p>
+<p>照随机表接了四次，写成“书借给了买了买了”。</p>
+<p>第一步选错的“买”，又被当成接着写的依据。一步错，步步错。</p>
+<p>试个省事办法：把“妹妹”那一列第 4 个系数，从 -0.048 改成 -0.4。</p>
+<p>两个负数相乘得正，贡献的分数变多。“妹妹”涨到约 0.98，超过“买”，这回接对了。</p>
+<p>可把原句里的“小明”“妹妹”对调，回答开头和打分表照旧，电脑仍接“妹妹”。</p>
+<p>刚才那一改，两回都给妹妹加了分。同一张表，得过两关。</p>
+<div id="soft-3"></div>
+<p class="pause-point">这里可以先歇一下，下次从这一站接着读。</p></section>
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 同一张表，把两句都接完</h2>
+<p>先把手改系数恢复。</p>
+<p>两种原句，各出两题：</p>
+<ul class="bullet-list">
+<li>原句 A：接人名、接句号。</li>
+<li>原句 B（人物对调）：接人名、接句号。</li>
+</ul>
+<p>正确该接的目标定为 2 分，另外两个定为 0 分。</p>
+<p>程序反过来找合适的系数和偏置，让四道题都贴近目标。</p>
+<p>调好后，用同一套系数，两句都能完整生成。</p>
+<p>训练大语言模型，本质就是拿海量文本反复做“猜下一个 Token”：</p>
+<ul class="bullet-list">
+<li>看猜对的那个词分到多大概率。</li>
+<li>再一点点微调全部参数。</li>
+</ul>
+<p class="tip-text">课堂示例数值：这里只拿少量题目演示参数怎么调，不是大语言模型的完整训练过程。</p>
+<p class="tip-text">这几句是练过的例子。要判断模型会不会举一反三，还得拿没练过的句子测。</p>
+<p>回到现实，看 2017 年《Attention Is All You Need》的图 1。</p>
+<ul class="bullet-list">
+<li>左边读原句，右边生成回答。</li>
+<li>三处注意力、Add &amp; Norm、FFN 都能对上。</li>
+<li>右下是输入，右上是 Linear+Softmax。</li>
+<li><span class="mi">N×</span> 表示整套模块堆好多层。</li>
+</ul>
+<p>我们在平行世界里一步步搭出来的，正是这张图。</p>
+<p>最后，用“了”的四个数让电脑接出“书借给了妹妹。”，从数字到词，每一步都能翻回去重算。</p>
+<div class="demo-card" data-chapter="18" data-station="3" id="autoregressiveDemo"></div>
+<p>动手接完，再看静态图：同一张表怎么把两句都接完。</p>
+<figure class="tutorial-figure">
+<img alt="调好系数后拿两句不同原句分别测试，都从书借给了起步" class="zoomable" height="612" loading="lazy" src="../assets/images/img-89.webp" width="1100"/>
+<figcaption>同一张表，接完两句。</figcaption>
+</figure>
+<p>先看这张表。最后再翻到论文架构图，把我们的路线和原图对上。</p>
+<figure class="tutorial-figure">
+<img alt="翻到2017年《Attention Is All You Need》论文里的那张架构图" class="zoomable" height="733" loading="lazy" src="../assets/images/img-90.webp" width="1100"/>
+<figcaption>回到论文，对上那张图。</figcaption>
+</figure>
+<div id="soft-4"></div>
+</section>
+<section class="epilogue">
+<p class="ep-title">写在最后：从一句话，到一台 Transformer</p>
+<p>回头看，我们手里一直只有那一句话。</p>
+<p><span class="ep-group">先把词变成数。</span>长句拆成 31 个小单元，每个单元配上一组能算的数，再记上它站在第几个位置。文字，就这样落进了表格。</p>
+<p><span class="ep-group">再让每个位置会“查”。</span>这是全程的主角注意力。</p>
+<ul class="bullet-list">
+<li>带着问题 <span class="mi">Q</span> 出门。</li>
+<li>跟整句的 <span class="mi">K</span> 一个个点积。</li>
+<li>softmax 把分数换成加起来等于 1 的比例。</li>
+<li>按比例把各处的 <span class="mi">V</span> 取回来。</li>
+</ul>
+<p>分差太大容易偏，就除以 <span class="mi">√d</span> 收一收。一条路看不全，就分两个头各查各的，再拼起来。</p>
+<p><span class="ep-group">查回来，再加工、稳住。</span>新线索加回自己身上，是残差；同一行用两层乘加重新组合，是 FFN；每过一轮用层归一化把尺度理整齐。编码器就一层层堆起来。</p>
+<p><span class="ep-group">最后开口回答。</span></p>
+<ul class="bullet-list">
+<li>还没写出来的词，用掩码挡住，不许偷看。</li>
+<li>回答时，拿交叉注意力回原句确认。</li>
+<li>给词表每个候选打个分，挑概率最大的接在后面。</li>
+<li>再算下一个，一个词一个词接出整句。</li>
+</ul>
+<p>这些零件没有一个是凭空掉下来的，每一个都是为了解决前一步那个具体的麻烦，才被请进来的。</p>
+<p class="ep-end">现在，2017 年那张架构图上的每一块，你都能说出它在干什么、为什么非有它不可。这就是我们从一句话出发，想摸到的东西。</p>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：<span class="mi">W<sub>out</sub></span>、softmax 概率和自回归生成的完整接龙流程。</p><p>下一篇接着看：没有新篇，回到开头自己动手拆。</p></div>
+<section class="closing-words">
+<p>送一句里尔克的话：</p>
+<p class="quote-line"><em>Be patient toward all that is unsolved in your heart.</em> 请对你心中所有尚未解开的谜题，保持耐心。</p>
+<p>这段路，我陪着你一起拆开了 Transformer。我把我看懂的一切讲给你，但我也清楚，我的理解存在太多疏漏。</p>
+<p>往后再遇见庞大复杂的事物，惟愿你依旧愿意停下来，试着拆开看一看。带着你的疑问，继续往前走。</p>
+</section>
+<nav class="nav-bar">
+<a href="chapter-17.html">← 第 17 篇</a>
+<a href="../index.html">返回目录</a>
+</nav>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '18';
+            var totalStations = 4;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            DemoInteract.renderAutoregressive(document.getElementById('autoregressiveDemo'));
+            StepInteract.renderScoreColumn(document.getElementById('scoreColumnDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

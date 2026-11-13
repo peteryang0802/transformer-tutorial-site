@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 1 篇：把长句拆成小单元</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 1 篇　把长句拆成一个一个的小单元</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>前言里我们定了两个出发点。这一篇先争取把第一个实现了：看能不能把一个中文长句，解剖成一个一个的小单元。</p>
+<p>我们一直要用的长句是这句：<br/><strong>昨天，小明把妈妈买的那本蓝色封面的故事书借给了住在上海的妹妹，因为她下周要给孩子讲这个故事。</strong></p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>把长句拆成 31 个 Token，并给词表里的 Token 编号。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 8–10 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 每个字都认识，不等于读懂</h2>
+<p>假设把新华字典输给电脑，它就认得每个字。可这不代表它读得懂上面这个长句。</p>
+<p>比如问“谁把什么借给了谁”，它得知道：</p>
+<ul class="bullet-list">
+<li>“小明”是借出的人。</li>
+<li>“妹妹”是收书的人。</li>
+<li>“故事书”是借走的东西。</li>
+</ul>
+<p>再问“借的是哪本书”，又得把“妈妈买的”“蓝色封面的”都归到“故事书”上。</p>
+<p>还有那个“她”，单看这个字，谁知道指谁。</p>
+<p>到现在为止，字跟字之间的关系，电脑一点都不知道。可字和字的关系，恰恰是理解一句话的关键。我们就要从这个长句开始，一步步摸索怎么算这些关系，最后凑出一套完整的算法——这套算法，就是 Transformer。</p>
+<figure class="tutorial-figure">
+<img alt="卡通电脑面对“小明把书借给了妹妹”，每个字都认得却不懂整句在说什么，旁边有字典和字卡" class="zoomable" height="550" loading="lazy" src="../assets/images/img-01.webp" width="1100"/>
+<figcaption>字都认得，可字跟字的关系，电脑还一点不知道。</figcaption>
+</figure>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 怎么切成一个一个的单元</h2>
+<p>对汉语来说，最自然的拆法是拆成一个一个的汉字，可像“小明”“故事”这样的词，还得再组合起来。</p>
+<p>句子该切成多少个单元，没有标准答案。单元可以是一个字、一个词、词的一部分或者标点，哪怕它没有独立完整的意思。这些单元我们给它起个时髦的英文名字，叫 <strong>Token</strong>。不叫 word，是因为很多时候它并不是一个字或一个词。</p>
+<p>提醒一句：AI 技术没有标准答案，只要能用、用起来结果不错，就是好办法。这种实用主义会一直贯穿这个教程。</p>
+<p>这里我们把长句切成 31 个 Token，只是约定的切法，后文一直沿用。</p>
+<div id="tokenStrip"></div>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. Token 编号和位置号是两回事</h2>
+<p>“故事”这样的 Token 在句子里重复出现。我们去重后，把不重复的 Token 列成一张表，叫<strong>词表</strong>，再给表里每个 Token 编个号，这个号码叫 <strong>Token 编号</strong>。</p>
+<p>位置号通常按习惯从 1 开始；Token 编号为了方便电脑取数，通常从 0 开始。这只是编号约定，没有特别的数学含义。</p>
+<p>我们从句头走到尾，第一次遇到某个 Token 就给个新号，再遇到就沿用旧号。于是“昨天”是 0，“故事”是 11，“书”是 12。两处“故事”分别在第 13 处和第 30 处，却共用编号 11。本句有 31 个位置，词表收录了 27 个不同的 Token。</p>
+<div class="demo-card" data-chapter="01" data-station="2" id="sameTokenDemo"></div>
+<p>动手点完，再看静态图：两个位置虽然不同，箭头都指向同一个编号。</p>
+<figure class="tutorial-figure">
+<img alt="第13处和第30处的“故事”位置不同，却指向同一个 Token 编号 11" class="zoomable" height="403" loading="lazy" src="../assets/images/img-02.webp" width="1100"/>
+<figcaption>位置号不同，Token 编号相同，两处“故事”共用 11。</figcaption>
+</figure>
+<div id="soft-3"></div>
+</section>
+<section class="station" data-station-index="3" id="station-3">
+<h2>4. 怎么让电脑给新句子切 Token</h2>
+<p>这个教程只研究一句话，所以我们手工切。要是成千上万句话，就得让电脑按规则切 Token、查编号，这个程序叫<strong>分词器</strong>（Tokenizer）。</p>
+<p>先试个笨办法：一个字算一个 Token，再数哪些 Token 总挨着出现，哪一对出现得最多，就先把它们合起来。</p>
+<p>假设一份材料里，“故事书”出现 3 次，“故事会”出现 1 次，让电脑分析两轮。</p>
+<ul class="bullet-list">
+<li>第一轮，每个字都是一个 Token：故｜事｜书（3 次），故｜事｜会（1 次）。“故”和“事”挨着出现 4 次，最多，先合成“故事”。</li>
+<li>第二轮得重新数：故事｜书（3 次），故事｜会（1 次）。“故事”和“书”挨着 3 次，先合成“故事书”。</li>
+</ul>
+<p>电脑就这么不厌其烦地“统计、合并、再统计”，我们先约好合并多少轮，到了就停。它只管哪对更常挨着，不判断合出来的是不是一个词。这套反复合并相邻 Token 的办法，叫 <strong>BPE</strong>（Byte Pair Encoding）。</p>
+<figure class="tutorial-figure">
+<img alt="BPE 两轮合并示意：字级 Token 先合成“故事”，再合成“故事书”，并标注各序列出现次数" class="zoomable" height="483" loading="lazy" src="../assets/images/img-03.webp" width="1100"/>
+<figcaption>每轮重新统计，再合最常相邻的那一对，图里就是两轮。</figcaption>
+</figure>
+<p>图先把两轮合并摆出来。下面这个小演示，可以自己点“下一轮”跟着走。</p>
+<div class="demo-card" data-chapter="01" data-station="3" id="bpeDemo"></div>
+<div id="soft-4"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：31 个 Token、27 个词表项和对应编号。</p><p>下一篇接着看：给每个 Token 配一组能计算的数。</p></div><nav class="nav-bar">
+<a href="preface.html">← 写在前面</a>
+<a href="chapter-02.html">第 2 篇 →</a>
+</nav>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/sentence-data.js?v=20261113w"></script>
+<script src="../js/token-strip.js?v=20261113w"></script>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '01';
+            var totalStations = 4;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            TokenStrip.render(document.getElementById('tokenStrip'), {
+                title: '长句切成 31 个 Token',
+                showNumbers: true
+            });
+            DemoInteract.renderSameToken(document.getElementById('sameTokenDemo'));
+            DemoInteract.renderBPE(document.getElementById('bpeDemo'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>

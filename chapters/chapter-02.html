@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>第 2 篇：给每个 Token 配一组数</title><link href="../favicon.ico" rel="icon" type="image/x-icon"/>
+<link href="../css/style.css?v=20261113w" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="../index.html">← 返回目录</a>
+</nav>
+<h1 class="chapter-title">第 2 篇　给每个 Token 配一组能计算的数</h1>
+<div class="recap">
+<p class="recap-label">我们在这儿</p>
+<p>上一篇我们把例句拆成 31 个 Token，去重后词表有 27 个，也各自有了编号。现在电脑能按编号找到它们，可这些编号说明不了 Token 之间的其他联系。这一篇，我们试着给每个 Token 配一组数字，电脑以后可以拿这些数字来算。</p>
+</div><div class="chapter-guide"><p class="guide-row goal"><span class="guide-label">这一篇要解决</span>给每个 Token 配一组能计算的起始向量，并按原句位置存好。</p><p class="guide-row read-time"><span class="guide-label">大概阅读</span>约 7–9 分钟</p></div>
+<div class="station-progress" id="stationProgress"></div>
+<section class="station" data-station-index="0" id="station-0">
+<h2>1. 按编号认出 Token，这还不够</h2>
+<p>“小明”的编号是 2，“妹妹”是 17。17 比 2 大，可这没有任何意义：</p>
+<ul class="bullet-list">
+<li>不表示妹妹更年长。</li>
+<li>也不表示她更重要。</li>
+</ul>
+<p>编号就像身份证号，拿它们相减，算不出两个人的年龄差。</p>
+<p>再看两处“故事”。同一个 Token，编号都是 11，可一处在“故事｜书”里，另一处在“讲｜这个｜故事”里。编号能告诉电脑“两处都是故事”，但这两个位置、周围文字带来的区别，它说明不了。</p>
+<p>我们既想让这两个“故事”共用一个起点，又想让它们各自遇到的区别也能参与计算。怎么办？</p>
+<div id="soft-1"></div>
+</section>
+<section class="station" data-station-index="1" id="station-1">
+<h2>2. 还要放一组能计算的数</h2>
+<p>联想一下每个人的档案：</p>
+<ul class="bullet-list">
+<li>档案号帮我们找到这个人。</li>
+<li>想了解年龄、身高、教育背景，还得取出里面的资料。</li>
+</ul>
+<p>照这个思路，编号负责查找，再准备一组数字，让同一个 Token 不同方面的联系可以拿来算。</p>
+<p>先从两个数试起，比如“妹妹”暂用 [1, 2]。</p>
+<p>为什么是 1 和 2？我们只是先试试，用好算的数把存取和计算的办法弄清楚。</p>
+<p>换一组也行。合不合用，得放进后面的计算看结果才知道。</p>
+<p>这样按顺序排好的一组数，数学上叫<strong>向量</strong>。</p>
+<ul class="bullet-list">
+<li>这个例子有两格，叫二维向量。</li>
+<li>每格叫一个分量。</li>
+<li>[1, 2] 和 [2, 1] 顺序不同，不能混着用。</li>
+</ul>
+<details class="collapse math-card">
+<summary><span class="math-tag">数学小卡片</span>什么是向量？</summary>
+<div class="collapse-content">
+<p>向量就是按顺序排好的一组数，用方括号括起来。里面每一个数叫一个<strong>分量</strong>，也常说“一格”；有几个数，就叫几维向量。</p>
+<div class="math-eg">
+<p>[1, 2] 是一个二维向量：第 1 格是 1，第 2 格是 2。</p>
+<p>顺序很要紧，[1, 2] 和 [2, 1] 是两个不同的向量，不能混。</p>
+<p>也可以把它想成从原点出发的一个箭头：第 1 格决定横着走多少，第 2 格决定竖着走多少。</p>
+</div>
+</div>
+</details>
+<p>档案只是帮我们跨过这一步的类比。</p>
+<ul class="bullet-list">
+<li>我们没有规定第 1 格必须填“人物”。</li>
+<li>也没有规定第 2 格填“动作”。</li>
+<li>更不是把所有词义逐条塞进两格。</li>
+</ul>
+<div class="demo-card" data-chapter="02" data-station="1" id="vectorArrowDemo"></div>
+<div id="soft-2"></div>
+</section>
+<section class="station" data-station-index="2" id="station-2">
+<h2>3. 把向量排成表的形式</h2>
+<p>我们给词表每个 Token 准备一组共用的出发数字，叫<strong>起始向量</strong>，按编号存好。</p>
+<p>这次先这样安排：</p>
+<ul class="bullet-list">
+<li>“小明”用 [1, 0]。</li>
+<li>“妹妹”用 [1, 2]。</li>
+<li>“故事”用 [1, 1]。</li>
+</ul>
+<p>词表有 27 个 Token，每个向量两格。整张数字表就是 27 行、2 列，这样的数字表叫<strong>矩阵</strong>。</p>
+<p>完整的起始向量表记作 <span class="mi">E</span>，也叫<strong>嵌入矩阵</strong>。</p>
+<p>电脑要用“妹妹”时，先找它的编号 17，再到表里取出对应那一行 [1, 2]。</p>
+<p>我们用 <span class="mi">d</span> 表示每个向量有几格，这里 <span class="mi">d＝2</span>。</p>
+<p>这种把 Token 用向量表示、放进能计算的数字空间的办法，叫<strong>嵌入</strong>（Embedding）。</p>
+<div class="demo-card" data-chapter="02" data-station="2" id="lookupTableDemo"></div>
+<details class="collapse math-card">
+<summary><span class="math-tag">数学小卡片</span>什么是矩阵？</summary>
+<div class="collapse-content">
+<p>把一组向量一行一行对齐排好，就是<strong>矩阵</strong>。横着数叫<strong>行</strong>，竖着数叫<strong>列</strong>，所以说一个矩阵“几行几列”。数学上用一个大写字母代表整张矩阵，比如这张起始向量表记作 <span class="mi">E</span>。</p>
+<div class="mtx-block">
+<span></span>
+<span class="mtx-cls"><span class="mtx-cl">第 1 列</span><span class="mtx-cl">第 2 列</span></span>
+<span class="mtx-rls"><span class="mtx-rl">第 1 行</span><span class="mtx-rl">第 2 行</span><span class="mtx-rl">第 3 行</span></span>
+<span class="mtx"><span class="mtx-numgrid">
+<span class="mtx-cell">1</span><span class="mtx-cell">0</span>
+<span class="mtx-cell">1</span><span class="mtx-cell">2</span>
+<span class="mtx-cell">1</span><span class="mtx-cell">1</span>
+</span></span>
+</div>
+<p class="mtx-note">这里只画 3 行示意，实际嵌入矩阵 <span class="mi">E</span> 有 27 行、2 列。括号里每个数叫矩阵的<strong>元素</strong>，用“大写字母加两个下标”定位：<span class="mi">E<sub>ij</sub></span> 表示第 <span class="mi">i</span> 行、第 <span class="mi">j</span> 列那个数。比如 <span class="mi">E<sub>12</sub></span> 就是第 1 行第 2 列，这里等于 0。</p>
+<div class="math-eg">
+<p>27 行、2 列的意思：一共 27 个向量，每个向量两格。</p>
+<p>后面会反复看到“<span class="mi">n</span> 行 <span class="mi">d</span> 列”，就是 <span class="mi">n</span> 个位置、每个位置的向量有 <span class="mi">d</span> 格。</p>
+</div>
+</div>
+</details>
+<p>注意，两处“故事”到现在共用一个起始向量 [1, 1]。想想同一张红桃 7：跟 5、6、8、9 放一起能组成顺子，换成 3、10、Q、A 就凑不成。牌还是那张，能不能成顺子，得看跟谁搭。两处“故事”也一样：出发时共用一个起点，含义相同，但接下来左邻右舍变化了，含义也就大相径庭了。</p>
+<figure class="tutorial-figure">
+<img alt="同一张红桃7，跟 5、6、8、9 能补成顺子，跟 3、10、Q、A 就凑不成，作用要看眼前组合" class="zoomable" height="428" loading="lazy" src="../assets/images/img-05.webp" width="1100"/>
+<figcaption>起始资料可以共用，这次怎么用，还得看周围的牌。</figcaption>
+</figure>
+<p>具体做法是：</p>
+<ul class="bullet-list">
+<li>先按编号查表。</li>
+<li>再把取出的向量，存到按句子顺序排的矩阵里。</li>
+<li>一个位置对应一行。</li>
+</ul>
+<p>两处“故事”都查编号 11、取到 [1, 1]，分别存在第 13 行、第 30 行。</p>
+<p>注意，分开存不会自动让数字不同。此刻两处仍是 [1, 1]，我们只是先分开存好，后面才好各算各的。</p>
+<figure class="tutorial-figure">
+<img alt="词表里的“故事”编号 11、起始向量 [1,1]，分别取出存到第 13 处和第 30 处，此刻两处都是 [1,1]" class="zoomable" height="611" loading="lazy" src="../assets/images/img-06.webp" width="1100"/>
+<figcaption>同一个起点，按两个位置分别存好，后面再把各处情况算进去。</figcaption>
+</figure>
+<div class="tbl-switch" id="twoTableSwitch">
+<div class="tbl-tabs">
+<button class="tbl-tab active" data-i="0">起始向量表 <span class="mi">E</span></button>
+<button class="tbl-tab" data-i="1">句中各位置的向量</button>
+</div>
+<div class="tbl-panel active" data-i="0">
+<p class="tbl-row"><span class="tbl-k">怎么用</span><span class="tbl-v">对应词表一个 Token，出现几次都查这一行</span></p>
+<p class="tbl-row"><span class="tbl-k">多少行</span><span class="tbl-v">27 行</span></p>
+</div>
+<div class="tbl-panel" data-i="1">
+<p class="tbl-row"><span class="tbl-k">怎么用</span><span class="tbl-v">对应句中一个位置，先存起始向量，后面各算各的</span></p>
+<p class="tbl-row"><span class="tbl-k">多少行</span><span class="tbl-v">31 行</span></p>
+</div>
+</div>
+<p>后面用 <span class="mi">n</span> 表示句中有多少个位置。对这句，<span class="mi">n＝31</span>。</p>
+<div class="demo-card" data-chapter="02" data-station="2" id="embeddingMapDemo"></div>
+<div id="soft-3"></div>
+</section>
+<div class="chapter-summary"><p><span class="summary-label">这一篇收个尾</span></p><p>这一篇拿到：每个 Token 的起始向量，以及按 31 个位置存好的矩阵。</p><p>下一篇接着看：把位置信息加进数字。</p></div><nav class="nav-bar">
+<a href="chapter-01.html">← 第 1 篇</a>
+<a href="chapter-03.html">第 3 篇 →</a>
+</nav>
+<script src="../js/iframeResizer.contentWindow.min.js?v=20261113w"></script>
+<script src="../js/progress.js?v=20261113w"></script>
+<script src="../js/common-ui.js?v=20261113w"></script>
+<script src="../js/sentence-data.js?v=20261113w"></script>
+<script src="../js/math-interact.js?v=20261113w"></script>
+<script src="../js/lightbox.js?v=20261113w"></script>
+<script src="../js/demo-interact.js?v=20261113w"></script>
+<script src="../js/step-interact.js?v=20261113w"></script>
+<script>
+        (function () {
+            var chapterId = '02';
+            var totalStations = 3;
+            renderStationProgress(document.getElementById('stationProgress'), chapterId, totalStations);
+            DemoInteract.renderVectorArrow(document.getElementById('vectorArrowDemo'));
+            DemoInteract.renderEmbeddingMap(document.getElementById('embeddingMapDemo'));
+            StepInteract.renderLookupTable(document.getElementById('lookupTableDemo'));
+            bindTabSwitch(document.getElementById('twoTableSwitch'));
+            for (var i = 1; i <= totalStations; i++) {
+                var m = document.getElementById('soft-' + i);
+                if (m) makeSoftMark(m, chapterId, i - 1);
+            }
+            observeStations(chapterId, totalStations);
+            refreshProgress(chapterId);
+        })();
+    </script>
+</body>
+</html>
