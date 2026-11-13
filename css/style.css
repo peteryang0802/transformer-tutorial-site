@@ -1518,6 +1518,12 @@ sup { vertical-align: 0.6em; }
 }
 .hw-head-1 .hw-mini-fill { background: #14b8a6; }
 .hw-head-2 .hw-mini-fill { background: #8b5cf6; }
+.hw-mini-zero {
+    margin: 6px 0 2px;
+    font-size: 11px;
+    color: #6b7280;
+    font-style: italic;
+}
 
 .hw-controls {
     display: flex;
@@ -1556,6 +1562,7 @@ sup { vertical-align: 0.6em; }
     .hw-mini-lab { color: #9ca3af; }
     .hw-mini-track { background: #374151; }
     .hw-mini-num { color: #9ca3af; }
+    .hw-mini-zero { color: #9ca3af; }
     .hw-load .hw-status { color: #9ca3af; }
 }
 

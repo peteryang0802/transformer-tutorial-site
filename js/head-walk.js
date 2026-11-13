@@ -45,16 +45,23 @@
     }
 
     function miniBars(aRow) {
-        return aRow.map(function (v, i) {
+        var zeroCount = 0;
+        var h = aRow.map(function (v, i) {
+            var pct = (v * 100).toFixed(1);
+            if (pct === '0.0') { zeroCount++; return ''; }
             var pos = i + 1;
             var tok = global.SentenceData ? global.SentenceData.tokenAt(pos) : '';
             return '<div class="hw-mini">' +
                 '<span class="hw-mini-lab">' + pos + ' ' + tok + '</span>' +
                 '<span class="hw-mini-track"><span class="hw-mini-fill" style="width:' +
-                (v * 100).toFixed(1) + '%"></span></span>' +
-                '<span class="hw-mini-num">' + (v * 100).toFixed(1) + '%</span>' +
+                pct + '%"></span></span>' +
+                '<span class="hw-mini-num">' + pct + '%</span>' +
                 '</div>';
         }).join('');
+        if (zeroCount > 0) {
+            h += '<p class="hw-mini-zero">另外 ' + zeroCount + ' 处约为 0，就不一条条列了。</p>';
+        }
+        return h;
     }
 
     function render(container, opts) {
