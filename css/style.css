@@ -401,8 +401,9 @@ sup { vertical-align: 0.6em; }
 
 /* ===== 手机端适配：小于 768px ===== */
 @media (max-width: 768px) {
+    /* 只保留字号保底，不再给所有元素无差别加 padding；
+       各组件用自己基础样式里设计的 padding，手机端紧凑值在文末保底块写回 */
     body :not(#z):not(sub):not(sup){
-        padding: 20px 16px;
         font-size: 17px;
     }
     body { padding: 28px 16px calc(96px + env(safe-area-inset-bottom)); }
@@ -418,9 +419,10 @@ sup { vertical-align: 0.6em; }
 
 /* ===== 深色模式适配 ===== */
 @media (prefers-color-scheme: dark) {
+    /* body 自己铺深色底；普通元素透明露出它，组件靠自己的深色背景规则分层 */
+    body { background-color: #111827; }
     body :not(#z){
         color: #e5e7eb;
-        background-color: #111827;
     }
     .demo-card {
         background: #1f2937;
@@ -2219,6 +2221,19 @@ sup { vertical-align: 0.6em; }
   body .ra-line:not(#z), body .ra-line-label:not(#z),
   body .ra-nums:not(#z), body .ra-flag:not(#z) {
     padding: 0;
+  }
+  /* TokenStrip：通配规则把每层都撑成 20px 大 padding，这里写回紧凑小卡片 */
+  body .ts-wrap:not(#z),
+  body .ts-strip:not(#z),
+  body .ts-num:not(#z),
+  body .ts-word:not(#z) {
+    padding: 0;
+  }
+  body .ts-token:not(#z) {
+    padding: 3px 7px;
+  }
+  body .ts-num:not(#z) {
+    font-size: 10px;
   }
   /* 容器/卡片类：写回各自设计的 padding */
   body .df-node:not(#z) { padding: 8px 3px; font-size: 11.5px; }
