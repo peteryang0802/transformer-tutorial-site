@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>现实手册：我们推导的东西，在真实世界叫什么</title>
+<link href="favicon.ico" rel="icon" type="x-icon"/>
+<link href="css/style.css?v=20261114r3" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav-bar">
+<a href="index.html">← 返回总封面</a>
+<a href="chapters/preface.html">第一册</a>
+<a href="book2/index.html">第二册</a>
+</nav>
+
+<h1>现实手册：我们推导的东西，在真实世界叫什么</h1>
+
+<p>先说这一页是干嘛的。两册正文走的是“平行世界”：不搬真实历史，一个矛盾一个矛盾地把 Transformer 推出来。这么读主线干净，可也有个毛病——你学的东西，在真实世界里其实各有名字、各有来历。</p>
+<p>这一页就是那张“对得上号”的地图。它不进主线，你啥时候想知道手里这个零件外面怎么叫，回来翻就行。</p>
+
+<h2>一、概念对照表：我们的叫法 ↔ 真实世界的名字</h2>
+<p>左边是两册里你见过的说法，右边是它在真实世界的名字、大概年代和代表。</p>
+
+<div class="demo-card">
+<table class="mv-table">
+<thead>
+<tr>
+<th style="text-align:left;">我们教程里的说法</th>
+<th style="text-align:left;">真实世界的名字</th>
+<th style="text-align:left;">年代 / 代表</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">把长句切成小单元、把长词拆成常见小块</td>
+<td style="text-align:left;">分词、Tokenization、BPE（字节对合并）</td>
+<td style="text-align:left;">BPE 原本 1994 年是数据压缩的招，2016 年前后拿来做 NLP 分词</td>
+</tr>
+<tr>
+<td style="text-align:left;">给每个 Token 配一组能算的数</td>
+<td style="text-align:left;">词向量、词嵌入（Embedding）、分布式表示</td>
+<td style="text-align:left;">分布式表示 1986；Word2Vec 2013 把它带火</td>
+</tr>
+<tr>
+<td style="text-align:left;">找人接力传话（被否定的笨办法）</td>
+<td style="text-align:left;">RNN、LSTM、GRU 这一类循环网络</td>
+<td style="text-align:left;">RNN 1980 年代；LSTM 1997，加了“门”缓解遗忘</td>
+</tr>
+<tr>
+<td style="text-align:left;">让“站在哪儿”也参与计算</td>
+<td style="text-align:left;">位置编码（Positional Encoding）</td>
+<td style="text-align:left;">正弦那套随 Transformer 在 2017 提出</td>
+</tr>
+<tr>
+<td style="text-align:left;">通讯录直接调取、用当前词去算匹配分</td>
+<td style="text-align:left;">注意力（Attention）</td>
+<td style="text-align:left;">Bahdanau 注意力 2014，先在翻译上用</td>
+</tr>
+<tr>
+<td style="text-align:left;">带着问题查、被查、取回三样东西</td>
+<td style="text-align:left;">QKV、自注意力（Self-Attention）</td>
+<td style="text-align:left;">2017《Attention Is All You Need》</td>
+</tr>
+<tr>
+<td style="text-align:left;">分两路查，再拼回来</td>
+<td style="text-align:left;">多头注意力（Multi-Head Attention）</td>
+<td style="text-align:left;">2017</td>
+</tr>
+<tr>
+<td style="text-align:left;">把线索加回自己</td>
+<td style="text-align:left;">残差连接（Residual Connection）</td>
+<td style="text-align:left;">ResNet 2015 带火</td>
+</tr>
+<tr>
+<td style="text-align:left;">同一行里重新组合一遍</td>
+<td style="text-align:left;">前馈网络（FFN）</td>
+<td style="text-align:left;">经典组件，Transformer 里逐位置各算各的</td>
+</tr>
+<tr>
+<td style="text-align:left;">把尺度理一理</td>
+<td style="text-align:left;">层归一化（LayerNorm）</td>
+<td style="text-align:left;">2016</td>
+</tr>
+<tr>
+<td style="text-align:left;">只准看已经写出来的</td>
+<td style="text-align:left;">因果掩码（Causal Mask）</td>
+<td style="text-align:left;">2017，生成模型的硬规矩</td>
+</tr>
+<tr>
+<td style="text-align:left;">回答时回查原句资料</td>
+<td style="text-align:left;">交叉注意力（Cross-Attention）</td>
+<td style="text-align:left;">2014/2017，编码器—解码器那套用</td>
+</tr>
+<tr>
+<td style="text-align:left;">给词表打分、选出下一个词</td>
+<td style="text-align:left;">输出投影加 softmax、自回归语言模型</td>
+<td style="text-align:left;">GPT 系列，初代 2018</td>
+</tr>
+<tr>
+<td style="text-align:left;">先教它照着规矩说话</td>
+<td style="text-align:left;">监督微调（SFT）</td>
+<td style="text-align:left;">后训练第一步</td>
+</tr>
+<tr>
+<td style="text-align:left;">人当裁判，朝人喜欢的方向调</td>
+<td style="text-align:left;">RLHF、DPO</td>
+<td style="text-align:left;">RLHF 随 ChatGPT 2022 走红；DPO 是后来更省事的替代</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h2>二、演进时间线：谁有什么毛病，谁来补</h2>
+<p>真实世界不是一开始就有 Transformer，是一步步被逼出来的。下面这条线只讲“上一步差在哪、下一步补什么”，不展开。</p>
+
+<div class="demo-card">
+<ul class="bullet-list">
+<li><strong>1948 · N-Gram</strong>：数相邻词的频率来猜下一个。简单，可窗口一长组合就爆炸，远处的关系根本看不到。</li>
+<li><strong>1954 前后 · 词袋 BoW、TF-IDF</strong>：把一句话当成一袋子词，不管先后顺序。语序里的信息全丢了。</li>
+<li><strong>1986 · 分布式表示 + RNN</strong>：词变成向量，意思近的在空间里离得近；RNN 能顺着顺序接力。可它隔远了就忘，还难训练。</li>
+<li><strong>1997 · LSTM</strong>：给 RNN 加了几道“门”，决定记住啥、忘掉啥，长距离遗忘缓解了不少，但还是得一步步来，没法并行。</li>
+<li><strong>2003 · NPLM</strong>：头一回正经用神经网络做语言模型，词向量这条路走通了。</li>
+<li><strong>2013 · Word2Vec</strong>：把词向量做得又快又好用，大家突然发现向量里真压着规律。</li>
+<li><strong>2014 · Seq2Seq 和注意力萌芽</strong>：能做翻译了，可整句先压成一个中间向量，句子一长这个“瓶颈”就不够用。</li>
+<li><strong>2017 · Transformer</strong>：干脆不要循环，全靠注意力直接调取，既能看远处，又能一口气并行算，这是分水岭。</li>
+<li><strong>2018 · BERT 和 GPT 分家</strong>：BERT 走编码器、双向、做理解；GPT 走解码器、单向、做生成。一个擅长看懂，一个擅长写。</li>
+<li><strong>2022 · ChatGPT、RLHF</strong>：模型本来就会接话，再用人的偏好把它调得会聊天、合人意。</li>
+<li><strong>2023 · GPT-4 和 API 生态</strong>：能力再上台阶，大家开始在它上面搭应用、做检索、接工具。</li>
+</ul>
+<p class="tip-text">看出来没：每一步都不是谁拍脑袋，是上一步的毛病把下一步逼出来的。我们第一册里“笨办法→好办法”的路子，对应的就是这条真实历史，只是没点名。</p>
+</div>
+
+<h2>三、从我们的纯 JS，到工业界的 PyTorch</h2>
+<p>两册用自研引擎，是为了让你看清里面每一步。真实干活没人从零写这些，都调框架，最常见的是 PyTorch。对应关系在这儿。</p>
+
+<div class="demo-card">
+<table class="mv-table">
+<thead>
+<tr>
+<th style="text-align:left;">我们教程里的东西</th>
+<th style="text-align:left;">PyTorch 里的对应</th>
+</tr>
+</thead>
+<tbody>
+<tr><td style="text-align:left;">给词配一组数</td><td style="text-align:left;"><code>nn.Embedding</code></td></tr>
+<tr><td style="text-align:left;">矩阵乘、线性变换</td><td style="text-align:left;"><code>nn.Linear</code></td></tr>
+<tr><td style="text-align:left;">自己手搓的注意力</td><td style="text-align:left;">手写，或直接用 <code>nn.MultiheadAttention</code></td></tr>
+<tr><td style="text-align:left;">前馈里的激活</td><td style="text-align:left;"><code>nn.ReLU</code> / <code>nn.GELU</code></td></tr>
+<tr><td style="text-align:left;">把尺度理整齐</td><td style="text-align:left;"><code>nn.LayerNorm</code></td></tr>
+<tr><td style="text-align:left;">交叉熵损失</td><td style="text-align:left;"><code>nn.CrossEntropyLoss</code>（里头已经含 LogSoftmax 和 NLL）</td></tr>
+<tr><td style="text-align:left;">自动微分、反向传播</td><td style="text-align:left;">一句 <code>loss.backward()</code></td></tr>
+<tr><td style="text-align:left;">更新参数</td><td style="text-align:left;"><code>torch.optim.Adam</code> / <code>AdamW</code></td></tr>
+<tr><td style="text-align:left;">一批批喂数据</td><td style="text-align:left;"><code>DataLoader</code></td></tr>
+<tr><td style="text-align:left;">现成的大模型</td><td style="text-align:left;">HuggingFace 的 <code>transformers</code> 库</td></tr>
+</tbody>
+</table>
+<p class="tip-text">你在两册里学的是“原理长啥样”，这些框架是“干活用的工具”。原理懂了，再去看这些 API，就是换个壳的事。</p>
+</div>
+
+<h2>四、补遗：几个主线没讲、但真实常用的方法</h2>
+
+<div class="demo-card">
+<h3 style="margin-top:0;">集束搜索（Beam Search）</h3>
+<p>贪心解码每步只留分数最高的那一个，可这一步选错，后面就一路错下去。集束搜索每步多留几个候选（比如留 3 个），让几条“半成品句子”一起往下比，最后挑总分最高的那条。翻译这种要稳的场景常用，代价是更慢、更占地方。它和温度、top-k 那套“随机采样”是两条路子：一个求稳，一个求变化。</p>
+</div>
+
+<div class="demo-card">
+<h3 style="margin-top:0;">可学习位置编码</h3>
+<p>我们第一册推的位置编码，是按正弦公式算好、写死的。真实世界还有另一种：给每个位置也配一组能训练的参数，让模型自己在数据里把“位置”学出来。GPT-3 那一类用的就是这种。两种各有取舍，正弦的不用学、对没见过的长度更友好，可学习的更灵活。</p>
+</div>
+
+<div class="demo-card">
+<h3 style="margin-top:0;">Dropout（随机丢弃）</h3>
+<p>训练时，随机挑一部分神经元临时“关掉”，这一轮让它们输出 0，下一轮再换一批。这么干是逼模型别死记某一条固定路径、别过度依赖某几个数，从而缓解过拟合。注意它只在训练时开着，真到推理、用模型的时候，全部神经元都正常打开。</p>
+</div>
+
+<div class="demo-card">
+<h3 style="margin-top:0;">权重为什么要这么初始化</h3>
+<p>参数不能一开始全取同一个数——那样大家对称、算出来的梯度一模一样，永远学不出分工；也不能一上来就取太大——很容易梯度爆炸、数值乱飞。所以要按每个参数“连着多少输入”（fan-in）把初始值缩放到一个小范围，这正是引擎里 <code>sqrt(1/fan)</code> 干的事。目的就一个：让训练从一个稳当的起点开始。</p>
+</div>
+
+<div class="chapter-summary">
+<p><span class="summary-label">这一页收个尾</span></p>
+<p>主线还是那个平行世界，不用改。这一页只负责把你推导的东西，和真实世界的名词、年代、工具对上号。看完能跟外面的技术文章对上话，它就够用了。</p>
+</div>
+
+<nav class="nav-bar">
+<a href="index.html">← 返回总封面</a>
+<a href="chapters/preface.html">第一册</a>
+<a href="book2/index.html">第二册</a>
+</nav>
+
+</body>
+</html>

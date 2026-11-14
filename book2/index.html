@@ -5,7 +5,7 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>第二册：亲手搭一个能用的小 LLM</title>
 <link href="favicon.ico" rel="icon" type="image/x-icon"/>
-<link href="css/style.css?v=20261114r2" rel="stylesheet"/>
+<link href="css/style.css?v=20261114r3" rel="stylesheet"/>
 </head>
 <body>
 <nav class="nav-bar">
@@ -13,6 +13,7 @@
 <a href="#goal">目标</a>
 <a href="#map">15 坎地图</a>
 <a href="glossary.html">术语表</a>
+<a href="../field-guide.html">现实手册</a>
 </nav>
 
 <h1>第二册　亲手搭一个能用的小 LLM</h1>
@@ -114,14 +115,25 @@
 </div>
 </div>
 
+<div class="demo-card" id="whyHalf">
+<p class="demo-title">先说明白：这一册为什么只用“一半”的 Transformer</p>
+<p>第一册咱们推的是完整的编码器—解码器，还专门推了交叉注意力。可这一册的搅拌机是纯解码器，编码器和交叉注意力没出场。这不是漏了，是任务分两条路。</p>
+<ul class="bullet-list">
+<li><strong>理解这条路</strong>：要读懂、分类、找信息，靠编码器，能双向看上下文。现实里 BERT 那一类走的就是这条。</li>
+<li><strong>生成这条路</strong>：要写、要接话，靠解码器，只准看前面已经写出来的。现实里 GPT 那一类走这条。</li>
+</ul>
+<p>咱们这册要让它写童话、把话接出来，走的是生成这条路，所以只留解码器。第一册推的编码器不白推——那是理解那条路的家底，真实世界里不少模型两套都带着。</p>
+<p class="tip-text">想把这些和真实模型、年代对上号，看根目录的<a href="../field-guide.html">现实手册</a>。</p>
+</div>
+
 <h2 id="map">15 坎地图（分 6 段）</h2>
 <div id="stageMap"></div>
 
 <p class="tip-text">进度都存在你自己的浏览器里，不用注册。每坎都有能动手的小演示，第 6 坎是第一个完整的训练台。</p>
 <div id="backupWrap" style="margin:12px 0;"></div>
 
-<script src="js/progress.js?v=20261114r2"></script>
-<script src="js/common-ui.js?v=20261114r2"></script>
+<script src="js/progress.js?v=20261114r3"></script>
+<script src="js/common-ui.js?v=20261114r3"></script>
 <script>
 // 阶段与坎的元数据
 const STAGES = [

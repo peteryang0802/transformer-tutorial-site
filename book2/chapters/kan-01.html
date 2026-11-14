@@ -5,7 +5,7 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>第 1 坎：切书——把一本童话切成小碎块</title>
 <link href="../favicon.ico" rel="icon" type="image/x-icon"/>
-<link href="../css/style.css?v=20261114r2" rel="stylesheet"/>
+<link href="../css/style.css?v=20261114r3" rel="stylesheet"/>
 </head>
 <body>
 <nav class="nav-bar">
@@ -79,6 +79,21 @@
 <div id="soft-3"></div>
 </section>
 
+<div class="demo-card">
+<p class="demo-title">看一眼真实语料长啥样：咱们这是玩具，外面的大得多</p>
+<p>这一册你手里的词表只有 40 个词、训练句子 22 条，是故意缩这么小，好让你看清原理。真实训练用的语料，比如从维基百科整理出来的 WikiText2，个头完全是另一回事：</p>
+<ul class="bullet-list">
+<li>词表大概 2.8 万个，训练样本好几万条，咱们的 40 词表差了几百倍。</li>
+<li>文本是大段没精心整理过的真实文章，专有名词、数字、标点全在里头。</li>
+</ul>
+<p class="tip-text">下面是示意，真实语料大概就是这样成段的样子：</p>
+<div class="code-mini">… This game is a tactical role-playing game developed by Sega
+for the PlayStation Portable . Released in 2011 , it is the third
+entry in the series and takes place during the same period as the
+first game . The story follows a small squad of soldiers …</div>
+<p>真实分词器在这种规模上跑 BPE，会合并出上万块；咱们在上面几步就能看完，是缩小了的。可规矩一模一样——还是按常见小块切、给每块编号，只是规模差了几千倍。</p>
+</div>
+
 <div class="chapter-summary">
 <p><span class="summary-label">这一坎收个尾</span></p>
 <p>这一坎拿到：Token、词表，还有 BPE 这个“按常见小块切”的折中办法。</p>
@@ -90,9 +105,9 @@
 <a href="kan-02.html">第 2 坎：出题 →</a>
 </nav>
 
-<script src="../js/progress.js?v=20261114r2"></script>
-<script src="../js/common-ui.js?v=20261114r2"></script>
-<script src="../js/kan-01.js?v=20261114r2"></script>
+<script src="../js/progress.js?v=20261114r3"></script>
+<script src="../js/common-ui.js?v=20261114r3"></script>
+<script src="../js/kan-01.js?v=20261114r3"></script>
 <script>
 (function () {
     var chapterId = '01';
