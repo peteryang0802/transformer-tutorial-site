@@ -5,7 +5,7 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>第 5 坎：反向传播——把责任一层层推回去</title>
 <link href="../favicon.ico" rel="icon" type="image/x-icon"/>
-<link href="../css/style.css?v=20261114r1" rel="stylesheet"/>
+<link href="../css/style.css?v=20261114r2" rel="stylesheet"/>
 </head>
 <body>
 <nav class="nav-bar">
@@ -62,7 +62,7 @@
 <div class="collapse-content">
 <p>咱们把事情化简到就两个数。设一条最短的链：</p>
 <div class="formula">z = w × x　　L = z²</div>
-<p>这里把损失先简化成平方，好算。取 w = 3，x = 2。</p>
+<p>这里先把损失拿平方当替身，好算——真实的损失是上一坎那个 -log，可手算太费劲，换成平方，链式法则的规矩一模一样。取 w = 3，x = 2。</p>
 <p><strong>先往前算</strong>：z = 3×2 = 6，L = 6² = 36。</p>
 <p><strong>再往回推</strong>，一步一步来：</p>
 <ul class="bullet-list">
@@ -71,6 +71,9 @@
 <li>一环扣一环，乘起来：dL/dw = 12 × 2 = 24。</li>
 </ul>
 <p>这个 24 就是 w 的梯度。它是正的，意思是 w 往大挪，损失会涨；那要降损失，更新就得往减号走——正好跟下一坎对上。</p>
+<p>那真实的 -log 损失，过 softmax 往回推，会不会很吓人？合起来看，结论反而干净：打分 z 那一环领到的责任，就是<strong>算出来的概率 p，减去正确答案该有的那个 1</strong>（写成 p − y）。</p>
+<p>啥意思？正确词的概率要是 0.9，责任就是 0.9 − 1 = −0.1，已经挺接近，轻轻推一把；要是只有 0.2，责任就是 0.2 − 1 = −0.8，差得远，使劲推。这就是真实引擎里反向传播最关键的一步，跟你手算的链式法则是一个道理。</p>
+<p>对了，这种算出来的梯度，还能拿最笨的办法验证：把参数轻轻挪一点点，看损失实际变多少，跟梯度对一对。这叫梯度核对，第 15 坎交付前还会用到。</p>
 </div>
 </details>
 <div id="soft-3"></div>
@@ -101,9 +104,9 @@
 <a href="kan-06.html">第 6 坎：更新 →</a>
 </nav>
 
-<script src="../js/progress.js?v=20261114r1"></script>
-<script src="../js/common-ui.js?v=20261114r1"></script>
-<script src="../js/kan-05.js?v=20261114r1"></script>
+<script src="../js/progress.js?v=20261114r2"></script>
+<script src="../js/common-ui.js?v=20261114r2"></script>
+<script src="../js/kan-05.js?v=20261114r2"></script>
 <script>
 (function () {
     var chapterId = '05';

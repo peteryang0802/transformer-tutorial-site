@@ -7,7 +7,7 @@ var ScaleDemo = (function () {
 
     var DATA_TOKENS = 3e11; // 假设喂 3000 亿块数据
     var MODELS = [
-        { name: '教学模型', n: 5917 },
+        { name: '教学模型', n: 5696 },
         { name: '小模型', n: 1e8 },
         { name: '大模型', n: 1e9 },
         { name: '超大模型', n: 1e12 }
